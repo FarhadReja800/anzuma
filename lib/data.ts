@@ -413,3 +413,83 @@ export const announcement: Announcement = {
   discountText: "Up to 50% OFF",
   fullMessage: "Mid-Season Sale: Up to 50% OFF. Use Code: CLOTYA50"
 }
+
+export interface DetailedProductMeta {
+  description: string
+  colors: { name: string; hex: string }[]
+  sizes: string[]
+  defaultSize: string
+  weight: string
+  dimensions: string
+  tags: string[]
+}
+
+export function getProductDetails(product: Product): DetailedProductMeta {
+  const category = product.category;
+  
+  if (category === "Pants") {
+    return {
+      description: "Super comfortable joggers featuring elasticized waist and hems. Designed for the perfect casual fit, made from organic heavy-weight cotton fleece.",
+      colors: [
+        { name: "black", hex: "#000000" },
+        { name: "gray", hex: "#718096" },
+        { name: "beige", hex: "#ecdccf" },
+        { name: "blue", hex: "#2b6cb0" },
+        { name: "green", hex: "#22543d" },
+        { name: "red", hex: "#9b2c2c" },
+        { name: "pink", hex: "#d53f8c" },
+      ],
+      sizes: ["XXS", "XS", "S", "M", "L", "XL", "XXL"],
+      defaultSize: "XL",
+      weight: "0.55 kg",
+      dimensions: "30 x 20 x 4 cm",
+      tags: ["pants", "casual", "sweatpants", "elastic"]
+    }
+  } else if (category === "Outerwear") {
+    return {
+      description: "A premium cut outerwear piece designed to shield you from elements. Filled with lightweight insulation and finished with custom zipper detailing.",
+      colors: [
+        { name: "black", hex: "#000000" },
+        { name: "beige", hex: "#ecdccf" },
+        { name: "green", hex: "#22543d" },
+        { name: "orange", hex: "#dd6b20" },
+        { name: "white", hex: "#ffffff" },
+      ],
+      sizes: ["S", "M", "L", "XL"],
+      defaultSize: "M",
+      weight: "0.85 kg",
+      dimensions: "40 x 30 x 8 cm",
+      tags: ["outerwear", "jacket", "warm", "insulated"]
+    }
+  } else if (category === "Shirts") {
+    return {
+      description: "Classic fit essential cotton top. Crafted with soft, highly breathable natural fibers to ensure day-long comfort and a clean modern silhouette.",
+      colors: [
+        { name: "white", hex: "#ffffff" },
+        { name: "gray", hex: "#718096" },
+        { name: "blue", hex: "#2b6cb0" },
+        { name: "orange", hex: "#dd6b20" },
+        { name: "pink", hex: "#d53f8c" },
+      ],
+      sizes: ["XS", "S", "M", "L", "XL"],
+      defaultSize: "S",
+      weight: "0.25 kg",
+      dimensions: "25 x 18 x 2 cm",
+      tags: ["shirt", "cotton", "tshirt", "breathable"]
+    }
+  } else {
+    return {
+      description: "Fine minimalist accessory. The perfect addition to your curated wardrobe, crafted with durable premium materials for daily utility.",
+      colors: [
+        { name: "black", hex: "#000000" },
+        { name: "beige", hex: "#ecdccf" },
+        { name: "orange", hex: "#dd6b20" },
+      ],
+      sizes: ["One Size"],
+      defaultSize: "One Size",
+      weight: "0.40 kg",
+      dimensions: "20 x 15 x 6 cm",
+      tags: ["accessory", "leather", "classic", "essential"]
+    }
+  }
+}

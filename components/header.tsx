@@ -198,7 +198,7 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="group flex items-center select-none">
             <span className="text-2xl font-black tracking-tight text-zinc-950 dark:text-zinc-50 transition-colors duration-200 hover:opacity-85 font-sans">
-              Clotya
+             Arzuma
             </span>
             <span className="text-[10px] font-bold text-zinc-500 ml-0.5 align-super">®</span>
           </Link>

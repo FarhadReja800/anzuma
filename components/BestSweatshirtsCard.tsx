@@ -51,7 +51,7 @@ export function BestSweatshirtsCard({
           </div>
 
           {/* Right Column - Image */}
-          <div className="relative w-full h-[300px] md:h-auto min-h-[300px]  bg-zinc-50 dark:bg-zinc-900 group overflow-hidden">
+          <div className="relative w-full h-[300px] md:h-auto min-h-[300px] bg-zinc-50 dark:bg-zinc-900 group overflow-hidden">
             <Image 
               src={image} 
               alt={title} 

@@ -70,23 +70,25 @@ export function FeaturedProductCard({ product }: FeaturedProductCardProps) {
       {/* Product Image Container */}
       <div className="relative aspect-2/3 w-full overflow-hidden bg-[#F5F5F5] dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 transition duration-300">
         
-        {/* Local Image Asset (Swaps source dynamically on hover to prevent double exposure) */}
-        {product.imageUrl ? (
-          <Image
-            src={isHovered && product.hoverImageUrl ? product.hoverImageUrl : product.imageUrl}
-            alt={product.name}
-            fill
-            className="object-cover transition-transform duration-500 scale-100 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-          />
-        ) : (
-          /* Fallback visual shape representation of an apparel item */
-          <div className={`w-full h-full bg-gradient-to-br ${product.imageBg} flex items-center justify-center p-8`}>
-            <div className="w-16 h-16 rounded-xl bg-white/60 dark:bg-black/50 backdrop-blur-sm flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
-              <span className="text-xs text-zinc-400 font-medium">No Image</span>
+        <Link href={`/shop?id=${product.id}`} className="absolute inset-0 z-0">
+          {/* Local Image Asset (Swaps source dynamically on hover to prevent double exposure) */}
+          {product.imageUrl ? (
+            <Image
+              src={isHovered && product.hoverImageUrl ? product.hoverImageUrl : product.imageUrl}
+              alt={product.name}
+              fill
+              className="object-cover transition-transform duration-500 scale-100 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+            />
+          ) : (
+            /* Fallback visual shape representation of an apparel item */
+            <div className={`w-full h-full bg-gradient-to-br ${product.imageBg} flex items-center justify-center p-8`}>
+              <div className="w-16 h-16 rounded-xl bg-white/60 dark:bg-black/50 backdrop-blur-sm flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
+                <span className="text-xs text-zinc-400 font-medium">No Image</span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </Link>
 
         {/* Badges Container top-left */}
         <div className="z-10 absolute left-3 top-3 flex flex-col gap-1 items-start">
@@ -106,6 +108,7 @@ export function FeaturedProductCard({ product }: FeaturedProductCardProps) {
         <button
           onClick={(e) => {
             e.preventDefault()
+            e.stopPropagation()
           }}
           className={`z-20 absolute right-3 top-3 h-8 w-8 rounded-full bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-red-500 transition-all duration-300 shadow-xs cursor-pointer ${
             isHovered ? "opacity-100 translate-y-0 scale-100" : "opacity-0 -translate-y-1 scale-95 pointer-events-none"
@@ -164,7 +167,7 @@ export function FeaturedProductCard({ product }: FeaturedProductCardProps) {
 
         {/* Product Title */}
         <h3 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-150 tracking-tight leading-snug hover:opacity-85 transition-opacity">
-          <Link href="/shop">{product.name}</Link>
+          <Link href={`/shop?id=${product.id}`}>{product.name}</Link>
         </h3>
 
         {/* Price Display */}
