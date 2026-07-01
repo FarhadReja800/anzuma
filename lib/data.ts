@@ -5,15 +5,16 @@ export interface Product {
   originalPrice?: number
   rating: number
   reviews: number
-  category: "Shirts" | "Outerwear" | "Pants" | "Accessories"
+  category: "Shirts" | "Outerwear" | "Pants" | "Accessories" | "Bags" | "Belts" | "Shoes" | "Wallets" | "Watches"
   imageBg: string
   tag: string
-  collections: ("men" | "women" | "outerwear")[]
+  collections: ("men" | "women" | "outerwear" | "bags" | "belts" | "shoes" | "cargo-trousers" | "accessories" | "baby" | "kids" | "wallets" | "watches")[]
   discountPercent?: number
   countdownDays?: number
   priceRange?: string
   imageUrl?: string
   hoverImageUrl?: string
+  images?: string[]
 }
 
 export interface Slide {
@@ -62,7 +63,7 @@ export const products: Product[] = [
   },
   {
     id: 101,
-    name: "Basic High Neck Puff Jacket",
+    name: "Basic High-Neck Puff Jacket",
     price: 69.00,
     originalPrice: 89.00,
     rating: 5.0,
@@ -92,23 +93,7 @@ export const products: Product[] = [
   },
   {
     id: 105,
-    name: "Blue Starter Logo T-Shirt",
-    price: 18.70,
-    originalPrice: 22.70,
-    rating: 5.0,
-    reviews: 1,
-    category: "Shirts",
-    imageBg: "from-zinc-100 to-zinc-200",
-    tag: "18%",
-    discountPercent: 18,
-    countdownDays: 78,
-    imageUrl: "/products/orange-tshirt.png",
-    hoverImageUrl: "/products/orange-tshirt-back.png",
-    collections: ["women"]
-  },
-  {
-    id: 106,
-    name: "Blue Starter Logo T-Shirt",
+    name: "Orange T-Shirt",
     price: 18.70,
     originalPrice: 22.70,
     rating: 5.0,
@@ -251,6 +236,14 @@ export const products: Product[] = [
     category: "Accessories",
     imageBg: "from-rose-50 to-orange-50 dark:from-zinc-900 dark:to-zinc-850",
     tag: "Sale",
+    imageUrl: "/products/ImageBag1.png",
+    hoverImageUrl: "/products/ImageBag2.png",
+    images: [
+      "/products/ImageBag1.png",
+      "/products/ImageBag2.png",
+      "/products/ImageBag3.png",
+      "/products/ImageBag4.png"
+    ],
     collections: ["women"]
   },
   {

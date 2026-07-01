@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { 
   Menu, 
   Search, 
@@ -9,7 +10,8 @@ import {
   Heart, 
   ShoppingBag, 
   ChevronDown,
-  Sparkles
+  Sparkles,
+  X
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -34,15 +36,20 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog"
 import { announcement } from "@/lib/data"
+import Image from "next/image"
 
 export function Header() {
+  const pathname = usePathname()
   const [wishlistCount, setWishlistCount] = React.useState(0)
   const [cartCount, setCartCount] = React.useState(0)
   const [cartTotal, setCartTotal] = React.useState(0.0)
   const [searchQuery, setSearchQuery] = React.useState("")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
+
+  const isActive = (href: string) => pathname === href
 
   // Demo interactive handlers
   const handleAddToWishlist = () => {
@@ -96,7 +103,14 @@ export function Header() {
             <SheetContent side="left" className="w-[320px] p-0 flex flex-col bg-white dark:bg-zinc-950 border-r dark:border-zinc-850">
               <SheetHeader className="p-6 border-b border-zinc-100 dark:border-zinc-900 flex flex-row items-center justify-between">
                 <SheetTitle className="text-xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
-                  Clotya<span className="text-sm font-semibold align-super">®</span>
+                 <Image
+                  src="/ChatGPT Image Jun 27, 2026, 10_41_50 PM.png"
+                  alt="Arzuma Logo"
+                  width={32}
+                  height={32}
+                  className="inline-block mr-2"
+                 
+                 />
                 </SheetTitle>
               </SheetHeader>
               
@@ -124,35 +138,55 @@ export function Header() {
                     <Link 
                       href="/women" 
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-between text-base font-medium text-zinc-800 hover:text-zinc-600 transition-colors dark:text-zinc-300 dark:hover:text-white"
+                      className={`flex items-center justify-between text-base font-medium transition-colors ${
+                        isActive("/women")
+                          ? "text-zinc-950 dark:text-white font-bold border-l-2 border-zinc-950 dark:border-white pl-2"
+                          : "text-zinc-800 hover:text-zinc-600 dark:text-zinc-300 dark:hover:text-white"
+                      }`}
                     >
                       Women
                     </Link>
                     <Link 
                       href="/men" 
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-between text-base font-medium text-zinc-800 hover:text-zinc-600 transition-colors dark:text-zinc-300 dark:hover:text-white"
+                      className={`flex items-center justify-between text-base font-medium transition-colors ${
+                        isActive("/men")
+                          ? "text-zinc-950 dark:text-white font-bold border-l-2 border-zinc-950 dark:border-white pl-2"
+                          : "text-zinc-800 hover:text-zinc-600 dark:text-zinc-300 dark:hover:text-white"
+                      }`}
                     >
                       Men
                     </Link>
                     <Link 
                       href="/outerwear" 
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-between text-base font-medium text-zinc-800 hover:text-zinc-600 transition-colors dark:text-zinc-300 dark:hover:text-white"
+                      className={`flex items-center justify-between text-base font-medium transition-colors ${
+                        isActive("/outerwear")
+                          ? "text-zinc-950 dark:text-white font-bold border-l-2 border-zinc-950 dark:border-white pl-2"
+                          : "text-zinc-800 hover:text-zinc-600 dark:text-zinc-300 dark:hover:text-white"
+                      }`}
                     >
                       Outerwear
                     </Link>
                     <Link 
                       href="/blog" 
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-between text-base font-medium text-zinc-800 hover:text-zinc-600 transition-colors dark:text-zinc-300 dark:hover:text-white"
+                      className={`flex items-center justify-between text-base font-medium transition-colors ${
+                        isActive("/blog")
+                          ? "text-zinc-950 dark:text-white font-bold border-l-2 border-zinc-950 dark:border-white pl-2"
+                          : "text-zinc-800 hover:text-zinc-600 dark:text-zinc-300 dark:hover:text-white"
+                      }`}
                     >
                       Blog
                     </Link>
                     <Link 
                       href="/contact" 
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-between text-base font-medium text-zinc-800 hover:text-zinc-600 transition-colors dark:text-zinc-300 dark:hover:text-white"
+                      className={`flex items-center justify-between text-base font-medium transition-colors ${
+                        isActive("/contact")
+                          ? "text-zinc-950 dark:text-white font-bold border-l-2 border-zinc-950 dark:border-white pl-2"
+                          : "text-zinc-800 hover:text-zinc-600 dark:text-zinc-300 dark:hover:text-white"
+                      }`}
                     >
                       Contact
                     </Link>
@@ -198,7 +232,13 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="group flex items-center select-none">
             <span className="text-2xl font-black tracking-tight text-zinc-950 dark:text-zinc-50 transition-colors duration-200 hover:opacity-85 font-sans">
-             Arzuma
+            <Image  
+            src="/ChatGPT Image Jun 27, 2026, 10_41_50 PM.png"
+            alt="Arzuma Logo"
+            width={120}
+            height={40}
+            className="inline-block mr-2"
+            />
             </span>
             <span className="text-[10px] font-bold text-zinc-500 ml-0.5 align-super">®</span>
           </Link>
@@ -254,19 +294,54 @@ export function Header() {
           </DropdownMenu>
 
           {/* Simple Link Items */}
-          <Link href="/women" className="text-[13px] font-bold tracking-widest text-zinc-900 hover:text-zinc-500 transition-colors duration-200 dark:text-zinc-100 dark:hover:text-zinc-400">
+          <Link
+            href="/women"
+            className={`relative text-[13px] font-bold tracking-widest transition-colors duration-200 ${
+              isActive("/women")
+                ? "text-zinc-950 dark:text-white after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-zinc-950 dark:after:bg-white"
+                : "text-zinc-900 hover:text-zinc-500 dark:text-zinc-100 dark:hover:text-zinc-400"
+            }`}
+          >
             WOMEN
           </Link>
-          <Link href="/men" className="text-[13px] font-bold tracking-widest text-zinc-900 hover:text-zinc-500 transition-colors duration-200 dark:text-zinc-100 dark:hover:text-zinc-400">
+          <Link
+            href="/men"
+            className={`relative text-[13px] font-bold tracking-widest transition-colors duration-200 ${
+              isActive("/men")
+                ? "text-zinc-950 dark:text-white after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-zinc-950 dark:after:bg-white"
+                : "text-zinc-900 hover:text-zinc-500 dark:text-zinc-100 dark:hover:text-zinc-400"
+            }`}
+          >
             MEN
           </Link>
-          <Link href="/outerwear" className="text-[13px] font-bold tracking-widest text-zinc-900 hover:text-zinc-500 transition-colors duration-200 dark:text-zinc-100 dark:hover:text-zinc-400">
+          <Link
+            href="/outerwear"
+            className={`relative text-[13px] font-bold tracking-widest transition-colors duration-200 ${
+              isActive("/outerwear")
+                ? "text-zinc-950 dark:text-white after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-zinc-950 dark:after:bg-white"
+                : "text-zinc-900 hover:text-zinc-500 dark:text-zinc-100 dark:hover:text-zinc-400"
+            }`}
+          >
             OUTERWEAR
           </Link>
-          <Link href="/blog" className="text-[13px] font-bold tracking-widest text-zinc-900 hover:text-zinc-500 transition-colors duration-200 dark:text-zinc-100 dark:hover:text-zinc-400">
+          <Link
+            href="/blog"
+            className={`relative text-[13px] font-bold tracking-widest transition-colors duration-200 ${
+              isActive("/blog")
+                ? "text-zinc-950 dark:text-white after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-zinc-950 dark:after:bg-white"
+                : "text-zinc-900 hover:text-zinc-500 dark:text-zinc-100 dark:hover:text-zinc-400"
+            }`}
+          >
             BLOG
           </Link>
-          <Link href="/contact" className="text-[13px] font-bold tracking-widest text-zinc-900 hover:text-zinc-500 transition-colors duration-200 dark:text-zinc-100 dark:hover:text-zinc-400">
+          <Link
+            href="/contact"
+            className={`relative text-[13px] font-bold tracking-widest transition-colors duration-200 ${
+              isActive("/contact")
+                ? "text-zinc-950 dark:text-white after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-zinc-950 dark:after:bg-white"
+                : "text-zinc-900 hover:text-zinc-500 dark:text-zinc-100 dark:hover:text-zinc-400"
+            }`}
+          >
             CONTACT
           </Link>
         </nav>
@@ -315,26 +390,38 @@ export function Header() {
                 <span className="sr-only">Search</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] bg-white dark:bg-zinc-950 p-6 rounded-2xl border border-zinc-200/50 dark:border-zinc-800 shadow-2xl">
-              <DialogHeader>
-                <DialogTitle className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Search Clotya</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSearchSubmit} className="mt-4 flex items-center gap-2">
-                <div className="relative flex-1">
+            <DialogContent className="fixed top-0 left-0 right-0 translate-x-0 translate-y-0 w-full max-w-7xl mt-25 mx-auto rounded-none border-t-0 border-x-0 border-b border-zinc-200    dark:bg-zinc-950 dark:border-zinc-850 shadow-md focus:outline-none [&>button.absolute]:hidden">
+              <div className="mx-auto max-w-7xl w-full">
+                {/* Top Row: Title & Close Button */}
+                <div className="flex items-center justify-between">
+                  <DialogTitle className="text-lg md:text-xl font-medium tracking-tight text-zinc-900 dark:text-zinc-50">
+                    What are you looking for?
+                  </DialogTitle>
+                  <DialogClose className="text-zinc-950 dark:text-zinc-50 hover:opacity-70 transition-opacity outline-none cursor-pointer">
+                    <X className="h-6 w-6 stroke-[1.5]" />
+                  </DialogClose>
+                </div>
+
+                {/* Middle Row: Input form */}
+                <form onSubmit={handleSearchSubmit} className="mt-8 relative w-full border-b border-zinc-200 dark:border-zinc-800 pb-2 flex items-center">
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search styles, brands, or collections..."
-                    className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 pl-11 text-sm outline-none transition duration-200 focus:border-zinc-950 focus:bg-white dark:border-zinc-800 dark:bg-zinc-900 dark:focus:border-zinc-50 dark:focus:bg-black"
+                    placeholder="Search your favorite product..."
+                    className="w-full bg-transparent text-xl md:text-2xl font-light text-zinc-800 dark:text-zinc-100 placeholder-zinc-300 dark:placeholder-zinc-600 outline-none border-none py-1.5 pr-10"
                     autoFocus
                   />
-                  <Search className="absolute left-4 top-3.5 h-4 w-4 text-zinc-400" />
-                </div>
-                <Button type="submit" className="rounded-xl px-5 h-11 bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-black dark:hover:bg-zinc-200">
-                  Search
-                </Button>
-              </form>
+                  <button type="submit" className="absolute right-0 top-1/2 -translate-y-1/2 text-zinc-800 dark:text-zinc-200 hover:opacity-75 transition-opacity cursor-pointer">
+                    <Search className="h-6 w-6 stroke-[1.5]" />
+                  </button>
+                </form>
+
+                {/* Bottom Row: Instruction text */}
+                <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-3 font-light">
+                  Please type the word you want to search and press &quot;enter&quot;
+                </p>
+              </div>
             </DialogContent>
           </Dialog>
 

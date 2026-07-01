@@ -1,9 +1,14 @@
 import { AllProductCategories } from "@/components/allProductCategories"
 
-export default function AllProductCategoriesPage() {
+interface Props {
+  searchParams: Promise<{ category?: string }>
+}
+
+export default async function AllProductCategoriesPage({ searchParams }: Props) {
+  const { category } = await searchParams
   return (
     <div>
-      <AllProductCategories />
+      <AllProductCategories initialCategory={category} />
     </div>
   )
 }

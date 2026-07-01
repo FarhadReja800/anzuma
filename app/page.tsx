@@ -4,7 +4,6 @@ import { ShieldCheck, Truck, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeroBanner } from "@/components/hero-banner";
 import { FeaturedProductCard } from "@/components/featured-product-card";
-import { NewCollections } from "@/components/new-collections";
 import BestSweatshirts from "@/components/bestSweatshirts";
 import Cenale from "@/components/cenale";
 import { Card, CardContent } from "@/components/ui/card";
@@ -121,7 +120,7 @@ export default function Home() {
         <div className="relative px-2 sm:px-0">
           <Carousel
             autoplay={false}
-            className="group relative w-full !overflow-visible"
+            className="group relative w-full overflow-visible!"
           >
             <div className="overflow-hidden w-full">
               <CarouselContent>
@@ -156,13 +155,13 @@ export default function Home() {
       {/* Featured Products Grid */}
       <section className="py-20 lg:py-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-hidden md:overflow-visible">
         <div className="space-y-6 max-w-2xl mb-16 text-left">
-          <span className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-450 dark:text-zinc-500">
+          <span className="text-base font-normal font-sans uppercase tracking-[0.2em] text-zinc-450 dark:text-zinc-500">
             Featured Products
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-normal tracking-tight text-zinc-950 dark:text-zinc-50 leading-[1.15]">
             Best Seller Products
           </h2>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed font-light">
+          <p className="text-lg font-sans font-normal text-zinc-500 dark:text-zinc-400 leading-relaxed font-light">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
             eiusmod tempor incididunt ut labore et dolore magna aliqua. Quis
             ipsum suspendisse ultrices gravida. Risus commodo viverra maecenas
@@ -204,7 +203,7 @@ export default function Home() {
      
 
       {/* New Collections Section - Layout 1 */}
-      <NewCollections
+      {/* <NewCollections
         variant="simple"
         subtitle="NEW COLLECTION"
         title="Best Sweatshirts and tracksuits for everyone!"
@@ -215,7 +214,7 @@ export default function Home() {
         image2=""
         testimonialText=""
         testimonialAuthor=""
-      />
+      /> */}
       <BestSweatshirtsCard/>
 
       {/* Latest News Section */}

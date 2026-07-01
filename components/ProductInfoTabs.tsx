@@ -10,7 +10,7 @@ interface ProductInfoTabsProps {
 
 type TabType = "description" | "additional" | "reviews"
 
-const secondParagraphs = {
+const secondParagraphs: Record<string, string> = {
   Pants: "Whether you're warming up, cooling down, or having a relaxed day at home, these pants provide unmatched ease of movement. The ribbed waist adjusts to your shape, while elastic cuffs anchor the fit around your ankles.",
   Outerwear: "Engineered for durability and versatility, this jacket features weather-resistant construction. It layers easily over hoodies and sweatshirts, making it an indispensable companion during transitional seasons.",
   Shirts: "Tailored to be soft on the skin and highly resilient, this shirt holds its shape wash after wash. The details are kept simple to let the premium fabric structure stand out as the highlight of your outfit.",

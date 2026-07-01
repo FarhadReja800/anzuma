@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { Heart, ShoppingBag, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -14,6 +15,7 @@ export interface Product {
   reviews: number
   imageBg: string
   tag: string
+  collections?: string[]
 }
 
 interface ProductCardProps {
@@ -23,6 +25,21 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onAddToCart, onAddToWishlist }: ProductCardProps) {
+  const pathname = usePathname() || ""
+  
+  const collections = product.collections || []
+  const colParam = pathname.includes("/men")
+    ? "men"
+    : pathname.includes("/women")
+      ? "women"
+      : collections.includes("men")
+        ? "men"
+        : collections.includes("women")
+          ? "women"
+          : ""
+
+  const shopUrl = colParam ? `/shop?id=${product.id}&col=${colParam}` : `/shop?id=${product.id}`
+
   // Format price helper
   const formatPrice = (price: string | number) => {
     if (typeof price === "number") {
@@ -31,14 +48,13 @@ export function ProductCard({ product, onAddToCart, onAddToWishlist }: ProductCa
     return price
   }
 
-  return (
-    <div className="group relative flex flex-col justify-between">
+  return (<div className="group relative flex flex-col justify-between min-h-[350px]">
       
       {/* Product Card Image Container */}
       <div className={`relative w-full overflow-hidden rounded-2xl bg-linear-to-br ${product.imageBg} border border-zinc-100 dark:border-zinc-900 flex items-center justify-center p-8 transition duration-300 group-hover:shadow-md`}>
         
         {/* Clickable link covering the card background and central icon */}
-        <Link href={`/shop?id=${product.id}`} className="absolute inset-0 z-10 flex items-center justify-center">
+        <Link href={shopUrl} className="absolute inset-0 z-10 flex items-center justify-center">
           {/* Visual shape representation of an apparel item */}
           <div className="w-20 h-20 rounded-2xl bg-white/60 dark:bg-black/55 backdrop-blur-md flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
             <ShoppingBag className="h-6 w-6 text-zinc-400 dark:text-zinc-650 stroke-[1.2]" />
@@ -88,7 +104,7 @@ export function ProductCard({ product, onAddToCart, onAddToWishlist }: ProductCa
           </span>
         </div>
         <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-600 transition-colors duration-200">
-          <Link href={`/shop?id=${product.id}`}>{product.name}</Link>
+          <Link href={shopUrl}>{product.name}</Link>
         </h3>
         <div className="flex items-baseline gap-2 pt-0.5">
           <span className="text-xs font-bold text-zinc-900 dark:text-zinc-50">

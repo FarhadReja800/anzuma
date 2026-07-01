@@ -8,11 +8,17 @@ import { products, getProductDetails } from "@/lib/data"
 
 interface ProductMainDetailsProps {
   productId: number
+  col?: string
 }
 
-export default function ProductMainDetails({ productId }: ProductMainDetailsProps) {
+export default function ProductMainDetails({ productId, col = "" }: ProductMainDetailsProps) {
   const product = products.find((p) => p.id === productId) || products[0]
   const meta = getProductDetails(product)
+
+  const collections = product.collections || []
+  const activeCollection = (col === "men" || col === "women")
+    ? col
+    : (collections.includes("men") ? "men" : "women")
 
   const [activeImage, setActiveImage] = React.useState<string>(
     product.imageUrl || "/products/orange-hoodie.png"
@@ -24,6 +30,15 @@ export default function ProductMainDetails({ productId }: ProductMainDetailsProp
     meta.defaultSize
   )
   const [qty, setQty] = React.useState<number>(1)
+  const [zoomPos, setZoomPos] = React.useState({ x: 0, y: 0 })
+  const [isZooming, setIsZooming] = React.useState(false)
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - left) / width) * 100
+    const y = ((e.clientY - top) / height) * 100
+    setZoomPos({ x, y })
+  }
 
 
   // Select 2 items for recent views (dynamically pick other items)
@@ -45,9 +60,11 @@ export default function ProductMainDetails({ productId }: ProductMainDetailsProp
         <div className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-8">
           <Link href="/" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition">Home</Link>
           <span className="mx-2">/</span>
-         <Link href="/allProductCategories">
-          <span className="hover:text-zinc-900 dark:hover:text-zinc-100 transition">Women</span>
-         </Link>
+          <Link href={`/allProductCategories?category=${activeCollection === "men" ? "men" : "women"}`}>
+            <span className="hover:text-zinc-900 dark:hover:text-zinc-100 transition">
+              {activeCollection === "men" ? "Men" : "Women"}
+            </span>
+          </Link>
           <span className="mx-2">/</span>
           <span className="hover:text-zinc-900 dark:hover:text-zinc-100 transition">{product.category}</span>
           <span className="mx-2">/</span>
@@ -59,17 +76,26 @@ export default function ProductMainDetails({ productId }: ProductMainDetailsProp
           
           {/* Left Column - Image Gallery (Aspect Ratio 4/5) */}
           <div className="lg:col-span-5 flex flex-col">
-            <div className="relative w-full aspect-[4/5] bg-zinc-50 dark:bg-zinc-900 overflow-hidden border border-zinc-100 dark:border-zinc-900">
+            <div 
+              className="relative w-full aspect-[4/5] bg-zinc-50 dark:bg-zinc-900 overflow-hidden border border-zinc-100 dark:border-zinc-900 cursor-zoom-in"
+              onMouseEnter={() => setIsZooming(true)}
+              onMouseLeave={() => setIsZooming(false)}
+              onMouseMove={handleMouseMove}
+            >
               <Image
                 src={activeImage}
                 alt={product.name}
                 fill
                 priority
-                className="object-cover"
+                className="object-cover transition-transform duration-100 ease-out"
+                style={{
+                  transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                  transform: isZooming ? "scale(2.2)" : "scale(1)",
+                }}
               />
               
               {/* Maximize Icon */}
-              <button className="absolute top-4 right-4 h-10 w-10 bg-white hover:bg-zinc-50 border border-zinc-100 shadow-sm rounded-full flex items-center justify-center transition cursor-pointer select-none">
+              <button className="absolute top-4 right-4 h-10 w-10 bg-white hover:bg-zinc-50 border border-zinc-100 shadow-sm rounded-full flex items-center justify-center transition cursor-pointer select-none z-10">
                 <Maximize2 className="h-4 w-4 text-zinc-900" />
               </button>
             </div>

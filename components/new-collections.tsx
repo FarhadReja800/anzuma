@@ -93,7 +93,7 @@ export function NewCollections(props: NewCollectionsProps) {
               </div>
             ) : variant === "overlapping" ? (
               /* Overlapping Layout Left Side */
-              <div className="relative w-[85%] aspect-[4/5] bg-zinc-50 dark:bg-zinc-900">
+              <div className="relative w-[85%] aspect-[4/4] bg-zinc-50 dark:bg-zinc-900">
                 <Image 
                   src={image1} 
                   alt={title} 

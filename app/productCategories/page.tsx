@@ -1,9 +1,9 @@
-import { AllProductCategories } from "@/components/allProductCategories"
+import { CategoryGrid } from "@/components/categoryGrid"
 
 export default function ProductCategoriesPage() {
   return (
     <div>
-      <AllProductCategories />
+      <CategoryGrid />
     </div>
   )
 }

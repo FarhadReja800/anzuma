@@ -3,8 +3,11 @@
 import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { LayoutGrid, List, Star, Plus, Minus, Check, Heart, ShoppingBag } from "lucide-react"
-import { products, getProductDetails, Product } from "@/lib/data"
+
+import { LayoutGrid, List, Plus, Minus, Check, ShoppingBag, ChevronRight, Star } from "lucide-react"
+import { products, Product } from "@/lib/data"
+import { FeaturedProductCard } from "@/components/featured-product-card"
+
 
 // Helper to extend products with attributes for filters
 const getProductDetailsExtended = (product: Product) => {
@@ -57,7 +60,7 @@ const AVAILABLE_COLORS = [
 ];
 
 // Sidebar category lists
-const MAIN_CATEGORIES = [
+export const MAIN_CATEGORIES = [
   { id: "men", name: "Men", subcategories: ["Jackets & coats", "Jeans", "Pants", "Shirts", "Shorts", "Sweatshirts & Hoodies", "Swimwear", "T-shirts"] },
   { id: "women", name: "Women", subcategories: ["Dresses", "Skirts", "Tops", "Jeans"] },
   { id: "bags", name: "Bags" },
@@ -72,14 +75,14 @@ const MAIN_CATEGORIES = [
   { id: "watches", name: "Watches" }
 ]
 
-export const AllProductCategories = () => {
+export const AllProductCategories = ({ initialCategory }: { initialCategory?: string } = {}) => {
   // Sidebar accordion states (Men is expanded/checked by default)
   const [expandedCategories, setExpandedCategories] = React.useState<Record<string, boolean>>({
-    men: true
+    [initialCategory || "men"]: true
   })
 
   // Selected categories/subcategories filters (Men is checked by default)
-  const [selectedMainCategories, setSelectedMainCategories] = React.useState<string[]>(["men"])
+  const [selectedMainCategories, setSelectedMainCategories] = React.useState<string[]>([initialCategory || "men"])
   const [selectedSubcategories, setSelectedSubcategories] = React.useState<string[]>([])
 
   // Price range states
@@ -124,33 +127,35 @@ export const AllProductCategories = () => {
     }))
   }
 
-  // Toggle main category selection
+  // Toggle main category selection (Single-select behavior)
   const toggleMainCategory = (catId: string) => {
     if (selectedMainCategories.includes(catId)) {
-      setSelectedMainCategories(prev => prev.filter(c => c !== catId))
-      // Also deselect all nested subcategories
-      const cat = MAIN_CATEGORIES.find(c => c.id === catId)
-      if (cat?.subcategories) {
-        setSelectedSubcategories(prev => prev.filter(sub => !cat.subcategories!.includes(sub)))
-      }
+      // If clicking the already selected one, optionally clear it, or keep it.
+      // We will allow unchecking it so they can see all products again.
+      setSelectedMainCategories([])
+      setSelectedSubcategories([])
     } else {
-      setSelectedMainCategories(prev => [...prev, catId])
+      // Select ONLY this category, clearing others
+      setSelectedMainCategories([catId])
+      setSelectedSubcategories([]) // Clear subcategories from previous selections
       // Auto expand when checked
       setExpandedCategories(prev => ({ ...prev, [catId]: true }))
     }
   }
 
-  // Toggle subcategory selection
+  // Toggle subcategory selection (single-select)
   const toggleSubcategory = (subName: string, parentId: string) => {
-    // If parent is not checked, check it first
+    // If parent is not checked, select it first (single-select)
     if (!selectedMainCategories.includes(parentId)) {
-      setSelectedMainCategories(prev => [...prev, parentId])
+      setSelectedMainCategories([parentId])
     }
 
     if (selectedSubcategories.includes(subName)) {
-      setSelectedSubcategories(prev => prev.filter(s => s !== subName))
+      // Clicking the same one again deselects it
+      setSelectedSubcategories([])
     } else {
-      setSelectedSubcategories(prev => [...prev, subName])
+      // Replace any previously selected subcategory with only this one
+      setSelectedSubcategories([subName])
     }
   }
 
@@ -159,43 +164,69 @@ export const AllProductCategories = () => {
     return products.map(getProductDetailsExtended)
   }, [])
 
+  // ─── Unified category matching helper ───────────────────────────────────────
+  // Determines if a product belongs to the active main category + optional subcategory.
+  // When a subcategory is selected the product must ALSO belong to the parent collection
+  // (e.g. "Shirts" under Men → men's shirts only, not women's shirts).
+  const matchesCategory = React.useCallback(
+    (product: ReturnType<typeof getProductDetailsExtended>): boolean => {
+      // No filter active → show everything
+      if (selectedMainCategories.length === 0 && selectedSubcategories.length === 0) return true
+
+      // Active parent category id (we use single-select so at most 1)
+      const parentId = selectedMainCategories[0] ?? null
+
+      // ── Subcategory is selected ──────────────────────────────────────────
+      if (selectedSubcategories.length > 0) {
+        const sub = selectedSubcategories[0].toLowerCase()
+        const prodCat = product.category.toLowerCase()
+
+        // Check product category matches the selected subcategory label
+        const subcatMatch =
+          sub.includes(prodCat) ||
+          prodCat.includes(sub) ||
+          (sub === "jackets & coats" && prodCat === "outerwear") ||
+          (sub === "sweatshirts & hoodies" && prodCat === "outerwear") ||
+          (sub === "t-shirts" && prodCat === "shirts") ||
+          (sub === "tops" && prodCat === "shirts") ||
+          (sub === "cargo trousers" && prodCat === "pants") ||
+          (sub === "shorts" && prodCat === "pants")
+
+        if (!subcatMatch) return false
+
+        // Additionally the product must belong to the parent collection
+        if (parentId === "men") return product.collections.includes("men")
+        if (parentId === "women") return product.collections.includes("women")
+        return true
+      }
+
+      // ── Only main category is selected ──────────────────────────────────
+      if (!parentId) return false
+
+      if (parentId === "men")           return product.collections.includes("men")
+      if (parentId === "women")         return product.collections.includes("women")
+      if (parentId === "outerwear")     return product.category === "Outerwear"
+      if (parentId === "accessories")   return product.category === "Accessories"
+      if (parentId === "bags")          return product.category === "Accessories"
+      if (parentId === "belts")         return product.category === "Accessories"
+      if (parentId === "shoes")         return product.category === "Accessories"
+      if (parentId === "cargo-trousers") return product.category === "Pants"
+      if (parentId === "wallets")       return product.category === "Accessories"
+      if (parentId === "watches")       return product.category === "Accessories"
+      if (parentId === "baby")          return false // no baby products yet
+      if (parentId === "kids")          return false // no kids products yet
+
+      return false
+    },
+    [selectedMainCategories, selectedSubcategories]
+  )
+
   // Calculate counts dynamically based on category & price filters, but BEFORE applying color, size, and status filters.
   // This is standard UX behavior so that the user sees how many items would remain if they click a filter.
   const counts = React.useMemo(() => {
     const baseProducts = extendedProducts.filter((product) => {
-      // 1. Price Filter
       if (product.price > appliedMaxPrice) return false
-
-      // 2. Category Filter
-      if (selectedMainCategories.length === 0 && selectedSubcategories.length === 0) return true
-
-      if (selectedSubcategories.length > 0) {
-        const subcategoryMatch = selectedSubcategories.some((sub) => {
-          const prodCat = product.category.toLowerCase()
-          const subName = sub.toLowerCase()
-          if (subName.includes(prodCat) || prodCat.includes(subName)) return true
-          if (subName === "jackets & coats" && prodCat === "outerwear") return true
-          if (subName === "sweatshirts & hoodies" && prodCat === "outerwear") return true
-          return false
-        })
-        if (subcategoryMatch) return true
-      }
-
-      const mainCategoryMatch = selectedMainCategories.some((catId) => {
-        if (catId === "men" && product.collections.includes("men")) return true
-        if (catId === "women" && product.collections.includes("women")) return true
-        if (catId === "outerwear" && product.category === "Outerwear") return true
-        if (catId === "accessories" && product.category === "Accessories") return true
-        if (catId === "pants" && product.category === "Pants") return true
-        if (catId === "shirts" && product.category === "Shirts") return true
-        return false
-      })
-
-      if (selectedSubcategories.length > 0) {
-        return false
-      }
-
-      return mainCategoryMatch
+      return matchesCategory(product)
     })
 
     const colorCounts: Record<string, number> = {}
@@ -210,11 +241,8 @@ export const AllProductCategories = () => {
       })
     })
 
-    return {
-      colorCounts,
-      sizeCounts
-    }
-  }, [extendedProducts, selectedMainCategories, selectedSubcategories, appliedMaxPrice])
+    return { colorCounts, sizeCounts }
+  }, [extendedProducts, matchesCategory, appliedMaxPrice])
 
   // Filter products based on selected categories, subcategories, colors, sizes, status and price range
   const filteredProducts = React.useMemo(() => {
@@ -222,34 +250,8 @@ export const AllProductCategories = () => {
       // 1. Price Filter
       if (product.price > appliedMaxPrice) return false
 
-      // 2. Category Filter
-      let categoryMatch = false
-      if (selectedMainCategories.length === 0 && selectedSubcategories.length === 0) {
-        categoryMatch = true
-      } else if (selectedSubcategories.length > 0) {
-        const subcategoryMatch = selectedSubcategories.some((sub) => {
-          const prodCat = product.category.toLowerCase()
-          const subName = sub.toLowerCase()
-          if (subName.includes(prodCat) || prodCat.includes(subName)) return true
-          if (subName === "jackets & coats" && prodCat === "outerwear") return true
-          if (subName === "sweatshirts & hoodies" && prodCat === "outerwear") return true
-          return false
-        })
-        if (subcategoryMatch) categoryMatch = true
-      } else {
-        const mainCategoryMatch = selectedMainCategories.some((catId) => {
-          if (catId === "men" && product.collections.includes("men")) return true
-          if (catId === "women" && product.collections.includes("women")) return true
-          if (catId === "outerwear" && product.category === "Outerwear") return true
-          if (catId === "accessories" && product.category === "Accessories") return true
-          if (catId === "pants" && product.category === "Pants") return true
-          if (catId === "shirts" && product.category === "Shirts") return true
-          return false
-        })
-        categoryMatch = mainCategoryMatch
-      }
-
-      if (!categoryMatch) return false
+      // 2. Category Filter (uses shared matchesCategory helper)
+      if (!matchesCategory(product)) return false
 
       // 3. Color Filter
       if (selectedColors.length > 0) {
@@ -271,7 +273,7 @@ export const AllProductCategories = () => {
 
       return true
     })
-  }, [extendedProducts, selectedMainCategories, selectedSubcategories, selectedColors, selectedSizes, selectedStatuses, appliedMaxPrice])
+  }, [extendedProducts, matchesCategory, selectedColors, selectedSizes, selectedStatuses, appliedMaxPrice])
 
   // Sort products
   const sortedProducts = React.useMemo(() => {
@@ -298,9 +300,25 @@ export const AllProductCategories = () => {
     setAppliedMaxPrice(priceSliderVal)
   }
 
+  // Featured products for the top section (first 4)
+  const featuredProducts = React.useMemo(() => products.slice(0, 4), [])
+
+  // Category pills data
+
+
   return (
-    <div className="bg-white text-zinc-900 dark:bg-black dark:text-zinc-50 min-h-screen py-10">
-      <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-20">
+    <div className="bg-white text-zinc-900 dark:bg-black dark:text-zinc-50 min-h-screen">
+
+      {/* ── Category Pills + Featured Products ─────────────────────────────── */}
+      <section className="border-b border-zinc-100 dark:border-zinc-900 py-10">
+        <div className="max-w-400 mx-auto px-6 sm:px-12 lg:px-20 space-y-10">
+
+
+
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-6  py-10" id="product-grid">
         
         {/* Main Grid Layout - Sidebar (left) and Content (right) */}
         <div className="flex flex-col lg:flex-row gap-12 items-start">
@@ -556,30 +574,34 @@ export const AllProductCategories = () => {
           <main className="flex-1 w-full space-y-10">
             
             {/* Column 2: Promo Banner (Top Right) */}
-            <section className="bg-[#F4F1EA] dark:bg-zinc-900/60 w-full overflow-hidden flex flex-col md:flex-row items-center justify-between p-8 md:p-12 min-h-[220px] relative border border-zinc-100 dark:border-zinc-900">
-              
-              {/* Left text column */}
-              <div className="space-y-4 max-w-md md:pr-6 z-10 text-left">
-                <h1 className="text-2xl sm:text-3xl font-medium tracking-tight text-zinc-950 dark:text-zinc-50 leading-tight">
-                  Plus-Size Styles for<br />Every Season
-                </h1>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 font-light leading-relaxed">
-                  Quis ipsum suspendisse ultrices gravida. Risus commodo viverra maecenas accumsan lacus vel facilisis.
-                </p>
-              </div>
+           <section className="relative w-full overflow-hidden flex flex-col md:flex-row items-center justify-between p-8 md:p-12 min-h-[420px] border border-zinc-100 dark:border-zinc-900">
 
-              {/* Right image column */}
-              <div className="relative w-44 sm:w-52 h-44 sm:h-52 shrink-0 mt-6 md:mt-0 select-none">
-                <Image
-                  src="/news_smiling_girl.png"
-                  alt="Styling and Apparel presentation model"
-                  fill
-                  priority
-                  className="object-cover rounded-full shadow-xs border-4 border-white dark:border-zinc-800"
-                />
-              </div>
+  {/* Background Image */}
+    <Image
+      src="/banner.png"
+      alt="Background"
+      fill
+      priority
+      className="object-top w-full h-[600px]"
+    />
 
-            </section>
+  {/* Optional Dark Overlay */}
+    <div className="absolute inset-0 bg-black/20" />
+
+  {/* Left text column */}
+  <div className="space-y-4 max-w-md md:pr-6 z-10 text-left">
+    <h1 className="text-2xl sm:text-3xl font-medium tracking-tight text-white leading-tight">
+      Plus-Size Styles for <br />
+      Every Season
+    </h1>
+
+    <p className="text-sm text-gray-200 leading-relaxed">
+      Quis ipsum suspendisse ultrices gravida. Risus commodo viverra maecenas
+      accumsan lacus vel facilisis.
+    </p>
+  </div>
+
+</section>
 
             {/* Column 3: Product display area (Bottom Right) */}
             <div className="space-y-6">
@@ -661,72 +683,11 @@ export const AllProductCategories = () => {
                 </div>
               ) : viewMode === "grid" ? (
                 
-                // Grid layout matches design images exactly (4 Columns on large screen)
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8">
-                  {paginatedProducts.map((product) => {
-                    const discount = product.discountPercent || ((product.id * 7) % 20) + 10 // Deterministic mock discount if not specified
-                    return (
-                      <div key={product.id} className="group flex flex-col w-full text-left">
-                        
-                        {/* Product Image Card */}
-                        <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#F5F5F5] dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
-                          
-                          {/* Green discount badge (top left) */}
-                          <span className="absolute left-3 top-3 z-20 bg-[#EEFCF3] text-[#10B981] dark:bg-[#10B981]/15 dark:text-[#10B981] px-2 py-0.5 text-[11px] font-bold rounded-xs shadow-xs">
-                            {discount}%
-                          </span>
-
-                          <Link href={`/shop?id=${product.id}`} className="absolute inset-0 z-0">
-                            {product.imageUrl ? (
-                              <Image
-                                src={product.imageUrl}
-                                alt={product.name}
-                                fill
-                                className="object-cover transition-transform duration-500 scale-100 group-hover:scale-105"
-                                sizes="(max-width: 768px) 100vw, 25vw"
-                              />
-                            ) : (
-                              <div className={`w-full h-full bg-gradient-to-br ${product.imageBg} flex items-center justify-center p-8`} />
-                            )}
-                          </Link>
-
-                          {/* Hover heart action */}
-                          <button className="z-20 absolute right-3 top-3 h-8 w-8 rounded-full bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-red-500 transition-all opacity-0 translate-y-[-5px] group-hover:opacity-100 group-hover:translate-y-0 cursor-pointer shadow-xs">
-                            <Heart className="h-4 w-4 stroke-[1.8]" />
-                          </button>
-                        </div>
-
-                        {/* Product details info below card */}
-                        <div className="mt-4 flex flex-col space-y-1">
-                          
-                          {/* Rating segment */}
-                          <div className="flex items-center gap-1 text-[11px] font-medium text-zinc-400">
-                            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                            <span>{product.rating} ({product.reviews} {product.reviews === 1 ? 'review' : 'reviews'})</span>
-                          </div>
-
-                          {/* Product Title link */}
-                          <h3 className="text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-150 tracking-tight leading-snug hover:text-zinc-950 dark:hover:text-zinc-50 transition-colors">
-                            <Link href={`/shop?id=${product.id}`}>{product.name}</Link>
-                          </h3>
-
-                          {/* Prices */}
-                          <div className="flex items-baseline gap-2 pt-0.5">
-                            {product.originalPrice && (
-                              <span className="text-[11px] text-zinc-400 dark:text-zinc-500 line-through">
-                                ${product.originalPrice.toFixed(2)}
-                              </span>
-                            )}
-                            <span className="text-xs sm:text-sm font-bold text-zinc-950 dark:text-zinc-100">
-                              ${product.price.toFixed(2)}
-                            </span>
-                          </div>
-
-                        </div>
-
-                      </div>
-                    )
-                  })}
+                // Grid layout — same FeaturedProductCard as home page
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+                  {paginatedProducts.map((product) => (
+                    <FeaturedProductCard key={product.id} product={product} />
+                  ))}
                 </div>
               ) : (
                 
@@ -738,7 +699,7 @@ export const AllProductCategories = () => {
                       <div key={product.id} className="group flex flex-col sm:flex-row gap-6 border-b border-zinc-100 dark:border-zinc-900 pb-6 text-left">
                         
                         {/* List Image */}
-                        <div className="relative w-full sm:w-44 aspect-[4/5] overflow-hidden bg-[#F5F5F5] dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shrink-0">
+                        <div className="relative w-full sm:w-44 aspect-[4/8] overflow-hidden bg-[#F5F5F5] dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shrink-0">
                           <span className="absolute left-3 top-3 z-20 bg-[#EEFCF3] text-[#10B981] px-2 py-0.5 text-[11px] font-bold rounded-xs shadow-xs">
                             {discount}%
                           </span>
@@ -750,7 +711,7 @@ export const AllProductCategories = () => {
                                 alt={product.name}
                                 fill
                                 className="object-cover"
-                                sizes="176px"
+                                sizes="250px"
                               />
                             ) : (
                               <div className={`w-full h-full bg-gradient-to-br ${product.imageBg}`} />
@@ -762,14 +723,14 @@ export const AllProductCategories = () => {
                         <div className="flex-1 flex flex-col justify-between py-1 space-y-3">
                           <div className="space-y-2">
                             <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
-                              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                              <span>{product.rating} ({product.reviews} reviews)</span>
+                              <Star className="h-2 w-2 fill-amber-400 text-amber-400" />
+                              <span className="text-[10px]">{product.rating} ({product.reviews} reviews)</span>
                             </div>
                             
-                            <h3 className="text-base font-bold text-zinc-850 dark:text-zinc-50">
+                            <h3 className="text-base font-medium text-zinc-850 dark:text-zinc-50">
                               <Link href={`/shop?id=${product.id}`} className="hover:opacity-80 transition-opacity">
                                 {product.name}
-                              </Link>
+                              </Link> 
                             </h3>
                             
                             <p className="text-xs text-zinc-450 dark:text-zinc-400 font-light leading-relaxed max-w-xl">
@@ -806,8 +767,29 @@ export const AllProductCategories = () => {
           </main>
 
         </div>
+  {/* Featured Products Row — same FeaturedProductCard as home page */}
+          <div className="space-y-6 mt-20">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+                Featured Products
+              </h2>
+              <Link
+                href="#product-grid"
+                className="flex items-center gap-1 text-xs font-semibold text-zinc-950 dark:text-zinc-100 hover:opacity-70 transition-opacity"
+              >
+                View all
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
 
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6">
+              {featuredProducts.map((product) => (
+                <FeaturedProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </div>
       </div>
+        
     </div>
   )
 }

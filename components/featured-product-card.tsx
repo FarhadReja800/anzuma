@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import NextImage from "next/image"
 import { Star, Heart } from "lucide-react"
 
@@ -15,6 +16,7 @@ interface FeaturedProductCardProps {
 
 export function FeaturedProductCard({ product }: FeaturedProductCardProps) {
   const [isHovered, setIsHovered] = React.useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = React.useState(0)
   const [timeLeft, setTimeLeft] = React.useState({
     days: 0,
     hours: 0,
@@ -22,6 +24,43 @@ export function FeaturedProductCard({ product }: FeaturedProductCardProps) {
     seconds: 0,
     isExpired: false
   })
+
+  const pathname = usePathname() || ""
+  
+  const collections = product.collections || []
+  const colParam = pathname.includes("/men")
+    ? "men"
+    : pathname.includes("/women")
+      ? "women"
+      : collections.includes("men")
+        ? "men"
+        : collections.includes("women")
+          ? "women"
+          : ""
+
+  const shopUrl = colParam ? `/shop?id=${product.id}&col=${colParam}` : `/shop?id=${product.id}`
+
+  // Compute the 4 image sources (either direct array or front/back combinations with zoom)
+  const images = React.useMemo(() => {
+    if (product.images && product.images.length > 0) {
+      const list = [...product.images]
+      while (list.length < 4) {
+        list.push(list[list.length - 1] || product.imageUrl || "")
+      }
+      return list.slice(0, 4)
+    }
+    const main = product.imageUrl || ""
+    const hover = product.hoverImageUrl || main
+    return [
+      main,  // Angle 1: Front
+      main,  // Angle 2: Front Detail/Zoom
+      hover, // Angle 3: Back
+      hover  // Angle 4: Back Detail/Zoom
+    ]
+  }, [product.imageUrl, product.hoverImageUrl, product.images])
+
+  const isZoomed = !product.images && (currentImageIndex === 1 || currentImageIndex === 3)
+  const currentImage = images[currentImageIndex]
 
   // Target date for countdown
   React.useEffect(() => {
@@ -65,21 +104,45 @@ export function FeaturedProductCard({ product }: FeaturedProductCardProps) {
     <div 
       className="group flex flex-col w-full text-left"
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseLeave={() => {
+        setIsHovered(false)
+        setCurrentImageIndex(0)
+      }}
     >
       {/* Product Image Container */}
-      <div className="relative aspect-2/3 w-full overflow-hidden bg-[#F5F5F5] dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 transition duration-300">
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#F5F5F5] dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 transition duration-300">
         
-        <Link href={`/shop?id=${product.id}`} className="absolute inset-0 z-0">
+        <Link href={shopUrl} className="absolute inset-0 z-0">
           {/* Local Image Asset (Swaps source dynamically on hover to prevent double exposure) */}
           {product.imageUrl ? (
-            <Image
-              src={isHovered && product.hoverImageUrl ? product.hoverImageUrl : product.imageUrl}
-              alt={product.name}
-              fill
-              className="object-cover transition-transform duration-500 scale-100 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-            />
+            <>
+              <Image
+                src={currentImage}
+                alt={product.name}
+                fill
+                className="object-cover transition-all duration-500"
+                style={{
+                  transform: isZoomed ? 'scale(1.18) translateY(4%)' : 'scale(1) translateY(0)'
+                }}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+              />
+              
+              {/* Vertical Hover Zones for Multi-Angle Images */}
+              {isHovered && (
+                <div className="absolute inset-0 z-10 flex">
+                  {Array.from({ length: 4 }).map((_, idx) => (
+                    <div
+                      key={idx}
+                      className="h-full flex-1 cursor-pointer"
+                      onMouseEnter={(e) => {
+                        e.preventDefault()
+                        setCurrentImageIndex(idx)
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           ) : (
             /* Fallback visual shape representation of an apparel item */
             <div className={`w-full h-full bg-gradient-to-br ${product.imageBg} flex items-center justify-center p-8`}>
@@ -127,7 +190,7 @@ export function FeaturedProductCard({ product }: FeaturedProductCardProps) {
             <div 
               key={i} 
               className={`h-0.5 flex-1 transition-colors duration-300 ${
-                i === 1 ? "bg-zinc-800 dark:bg-white" : "bg-zinc-350/40 dark:bg-zinc-700/40"
+                i === currentImageIndex ? "bg-zinc-800 dark:bg-white" : "bg-zinc-350/40 dark:bg-zinc-700/40"
               }`}
             />
           ))}
@@ -158,16 +221,16 @@ export function FeaturedProductCard({ product }: FeaturedProductCardProps) {
       {/* Product Details Section */}
       <div className="mt-4 flex flex-col space-y-1">
         {/* Rating Line */}
-        <div className="flex items-center gap-1 text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-          <Star className="h-3 w-3 fill-[#FBBF24] text-[#FBBF24]" />
+        <div className="flex items-center gap-1 text-base font-medium text-zinc-500 dark:text-zinc-400">
+          <Star className="h-4 w-4 fill-[#FBBF24] text-[#FBBF24]" />
           <span>
             {product.reviews} {product.reviews === 1 ? 'review' : 'reviews'}
           </span>
         </div>
 
         {/* Product Title */}
-        <h3 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-150 tracking-tight leading-snug hover:opacity-85 transition-opacity">
-          <Link href={`/shop?id=${product.id}`}>{product.name}</Link>
+        <h3 className="text-base sm:text-sm font-semibold text-zinc-900 dark:text-zinc-150 tracking-tight leading-snug hover:opacity-85 transition-opacity">
+          <Link href={shopUrl}>{product.name}</Link>
         </h3>
 
         {/* Price Display */}
