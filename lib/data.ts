@@ -17,6 +17,15 @@ export interface Product {
   images?: string[]
 }
 
+export interface CartItem {
+  id: number
+  name: string
+  price: number
+  qty: number
+  color: string
+  size: string
+}
+
 export interface Slide {
   id: number
   subtitle: string

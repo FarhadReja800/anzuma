@@ -35,7 +35,7 @@ export function HeroBanner({
   const arrowStyles = `${arrowWidthClass} ${arrowHeightClass} ${arrowRadiusClass} ${arrowBorderClass} ${arrowBgClass}`
 
   return (
-    <section className="relative w-430 mx-auto ">
+    <section className="relative w-full">
       <Carousel autoplay={true} className="group relative w-full bg-[#E5E5E3] dark:bg-zinc-950">
         <CarouselContent>
           {slides.map((slide) => (
@@ -44,18 +44,18 @@ export function HeroBanner({
               className={`relative flex flex-col md:flex-row items-center min-h-120 md:h-150 px-6 sm:px-12 lg:px-20 overflow-hidden ${slide.bgColorClass}`}
             >
               {/* Left Content */}
-              <div className="w-full md:w-[50%] space-y-6 text-left z-10 py-12 md:py-0 md:pr-4">
-                <span className="text-base font-medium uppercase tracking-[0.25em] ml-25 text-zinc-500 dark:text-zinc-400">
+              <div className="w-full md:w-[50%] space-y-6 text-left z-10 py-12 md:py-0 md:pr-4 pl-0 md:pl-10">
+                <span className="text-base font-medium uppercase tracking-[0.25em] text-zinc-500 dark:text-zinc-400">
                   {slide.subtitle}
                 </span>
-                <h2 className="text-4xl sm:text-5xl lg:text-[56px] xl:text-[62px] ml-25 font-medium tracking-tight text-zinc-900 dark:text-zinc-50 leading-[1.1] md:leading-[1.05]">
+                <h2 className="text-4xl sm:text-5xl lg:text-[56px] xl:text-[62px] font-medium tracking-tight text-zinc-900 dark:text-zinc-50 leading-[1.1] md:leading-[1.05]">
                   {slide.titleLight} <br />
                   {slide.titleBold}
                 </h2>
-                <p className="max-w-md ml-25 text-xs sm:text-base text-zinc-500 dark:text-zinc-400 leading-relaxed font-light">
+                <p className="max-w-md text-xs sm:text-base text-zinc-550 dark:text-zinc-400 leading-relaxed font-light">
                   {slide.description}
                 </p>
-                <div className="pt-2 ml-25">
+                <div className="pt-2">
                   <Link 
                     href={slide.buttonLink} 
                     className="group/btn inline-flex items-center gap-2 text-sm font-medium text-zinc-950 hover:opacity-70 transition dark:text-zinc-50"

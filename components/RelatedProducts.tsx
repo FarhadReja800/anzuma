@@ -83,7 +83,7 @@ function RelatedProductCard({ product }: { product: Product }) {
       
       {/* Image frame */}
       <div className="relative aspect-[4/5] w-full overflow-hidden bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-900/50">
-        <Link href={`/shop?id=${product.id}`}>
+        <Link href={`/shop?id=${product.id}`} className="relative block w-full h-full">
           <Image
             src={product.imageUrl || "/products/orange-hoodie.png"}
             alt={product.name}

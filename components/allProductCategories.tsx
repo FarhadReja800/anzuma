@@ -62,7 +62,7 @@ const AVAILABLE_COLORS = [
 // Sidebar category lists
 export const MAIN_CATEGORIES = [
   { id: "men", name: "Men", subcategories: ["Jackets & coats", "Jeans", "Pants", "Shirts", "Shorts", "Sweatshirts & Hoodies", "Swimwear", "T-shirts"] },
-  { id: "women", name: "Women", subcategories: ["Dresses", "Skirts", "Tops", "Jeans"] },
+  { id: "women", name: "Women", subcategories: ["Dresses", "Skirts", "Tops", "Jeans", "Jackets & coats"] },
   { id: "bags", name: "Bags" },
   { id: "belts", name: "Belts" },
   { id: "shoes", name: "Shoes" },
@@ -75,7 +75,7 @@ export const MAIN_CATEGORIES = [
   { id: "watches", name: "Watches" }
 ]
 
-export const AllProductCategories = ({ initialCategory }: { initialCategory?: string } = {}) => {
+export const AllProductCategories = ({ initialCategory, initialSubcategory, initialSearch }: { initialCategory?: string; initialSubcategory?: string; initialSearch?: string } = {}) => {
   // Sidebar accordion states (Men is expanded/checked by default)
   const [expandedCategories, setExpandedCategories] = React.useState<Record<string, boolean>>({
     [initialCategory || "men"]: true
@@ -83,7 +83,22 @@ export const AllProductCategories = ({ initialCategory }: { initialCategory?: st
 
   // Selected categories/subcategories filters (Men is checked by default)
   const [selectedMainCategories, setSelectedMainCategories] = React.useState<string[]>([initialCategory || "men"])
-  const [selectedSubcategories, setSelectedSubcategories] = React.useState<string[]>([])
+  const [selectedSubcategories, setSelectedSubcategories] = React.useState<string[]>(
+    initialSubcategory ? [initialSubcategory] : []
+  )
+
+  const [prevInitialCategory, setPrevInitialCategory] = React.useState(initialCategory)
+  const [prevInitialSubcategory, setPrevInitialSubcategory] = React.useState(initialSubcategory)
+
+  if (initialCategory !== prevInitialCategory || initialSubcategory !== prevInitialSubcategory) {
+    setPrevInitialCategory(initialCategory)
+    setPrevInitialSubcategory(initialSubcategory)
+    const targetCat = initialCategory || "men"
+    setSelectedMainCategories([targetCat])
+    setExpandedCategories(prev => ({ ...prev, [targetCat]: true }))
+    setSelectedSubcategories(initialSubcategory ? [initialSubcategory] : [])
+  }
+
 
   // Price range states
   const [priceSliderVal, setPriceSliderVal] = React.useState<number>(270)
@@ -197,6 +212,7 @@ export const AllProductCategories = ({ initialCategory }: { initialCategory?: st
         // Additionally the product must belong to the parent collection
         if (parentId === "men") return product.collections.includes("men")
         if (parentId === "women") return product.collections.includes("women")
+        if (parentId === "outerwear") return product.collections.includes("outerwear")
         return true
       }
 
@@ -205,7 +221,7 @@ export const AllProductCategories = ({ initialCategory }: { initialCategory?: st
 
       if (parentId === "men")           return product.collections.includes("men")
       if (parentId === "women")         return product.collections.includes("women")
-      if (parentId === "outerwear")     return product.category === "Outerwear"
+      if (parentId === "outerwear")         return product.collections.includes("outerwear")
       if (parentId === "accessories")   return product.category === "Accessories"
       if (parentId === "bags")          return product.category === "Accessories"
       if (parentId === "belts")         return product.category === "Accessories"
@@ -226,6 +242,14 @@ export const AllProductCategories = ({ initialCategory }: { initialCategory?: st
   const counts = React.useMemo(() => {
     const baseProducts = extendedProducts.filter((product) => {
       if (product.price > appliedMaxPrice) return false
+      
+      if (initialSearch) {
+        const query = initialSearch.toLowerCase()
+        const nameMatch = product.name.toLowerCase().includes(query)
+        const catMatch = product.category.toLowerCase().includes(query)
+        if (!nameMatch && !catMatch) return false
+      }
+
       return matchesCategory(product)
     })
 
@@ -242,7 +266,7 @@ export const AllProductCategories = ({ initialCategory }: { initialCategory?: st
     })
 
     return { colorCounts, sizeCounts }
-  }, [extendedProducts, matchesCategory, appliedMaxPrice])
+  }, [extendedProducts, matchesCategory, appliedMaxPrice, initialSearch])
 
   // Filter products based on selected categories, subcategories, colors, sizes, status and price range
   const filteredProducts = React.useMemo(() => {
@@ -253,19 +277,27 @@ export const AllProductCategories = ({ initialCategory }: { initialCategory?: st
       // 2. Category Filter (uses shared matchesCategory helper)
       if (!matchesCategory(product)) return false
 
-      // 3. Color Filter
+      // 3. Search Filter
+      if (initialSearch) {
+        const query = initialSearch.toLowerCase()
+        const nameMatch = product.name.toLowerCase().includes(query)
+        const catMatch = product.category.toLowerCase().includes(query)
+        if (!nameMatch && !catMatch) return false
+      }
+
+      // 4. Color Filter
       if (selectedColors.length > 0) {
         const hasColor = product.colors.some(c => selectedColors.includes(c))
         if (!hasColor) return false
       }
 
-      // 4. Size Filter
+      // 5. Size Filter
       if (selectedSizes.length > 0) {
         const hasSize = product.sizes.some(s => selectedSizes.includes(s))
         if (!hasSize) return false
       }
 
-      // 5. Status Filter
+      // 6. Status Filter
       if (selectedStatuses.length > 0) {
         if (selectedStatuses.includes("In Stock") && !product.inStock) return false
         if (selectedStatuses.includes("On Sale") && !product.onSale) return false
@@ -273,7 +305,7 @@ export const AllProductCategories = ({ initialCategory }: { initialCategory?: st
 
       return true
     })
-  }, [extendedProducts, matchesCategory, selectedColors, selectedSizes, selectedStatuses, appliedMaxPrice])
+  }, [extendedProducts, matchesCategory, selectedColors, selectedSizes, selectedStatuses, appliedMaxPrice, initialSearch])
 
   // Sort products
   const sortedProducts = React.useMemo(() => {
@@ -606,6 +638,17 @@ export const AllProductCategories = ({ initialCategory }: { initialCategory?: st
             {/* Column 3: Product display area (Bottom Right) */}
             <div className="space-y-6">
               
+              {initialSearch && (
+                <div className="flex items-center justify-between bg-zinc-50 border border-zinc-100 dark:bg-zinc-900/50 dark:border-zinc-800 px-4 py-2.5 text-xs text-zinc-800 dark:text-zinc-200">
+                  <span>
+                    Search results for: <span className="font-semibold text-[#df4a4a]">&quot;{initialSearch}&quot;</span>
+                  </span>
+                  <Link href="/allProductCategories" className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white font-semibold underline">
+                    Clear Search
+                  </Link>
+                </div>
+              )}
+              
               {/* Product list toolbar filters */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-t border-b border-zinc-100 dark:border-zinc-900 py-3 gap-4">
                 
@@ -684,7 +727,7 @@ export const AllProductCategories = ({ initialCategory }: { initialCategory?: st
               ) : viewMode === "grid" ? (
                 
                 // Grid layout — same FeaturedProductCard as home page
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-5">
                   {paginatedProducts.map((product) => (
                     <FeaturedProductCard key={product.id} product={product} />
                   ))}

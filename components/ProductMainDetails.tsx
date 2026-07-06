@@ -4,7 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Star, Maximize2, Heart, Share2, Ruler, Minus, Plus } from "lucide-react"
-import { products, getProductDetails } from "@/lib/data"
+import { products, getProductDetails, CartItem } from "@/lib/data"
 
 interface ProductMainDetailsProps {
   productId: number
@@ -40,6 +40,42 @@ export default function ProductMainDetails({ productId, col = "" }: ProductMainD
     setZoomPos({ x, y })
   }
 
+  const handleAddToCart = () => {
+    const cart: CartItem[] = JSON.parse(localStorage.getItem("cart") || "[]")
+    const existingIndex = cart.findIndex(
+      (item: CartItem) => item.id === product.id && item.color === selectedColor && item.size === selectedSize
+    )
+
+    if (existingIndex > -1) {
+      cart[existingIndex].qty += qty
+    } else {
+      cart.push({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        qty: qty,
+        color: selectedColor,
+        size: selectedSize || "M"
+      })
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart))
+    window.dispatchEvent(new Event("cart-updated"))
+    alert("Product added to cart successfully!")
+  }
+
+  const handleAddToWishlist = () => {
+    const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]")
+    if (!wishlist.includes(product.id)) {
+      wishlist.push(product.id)
+      localStorage.setItem("wishlist", JSON.stringify(wishlist))
+      window.dispatchEvent(new Event("wishlist-updated"))
+      alert("Product added to wishlist successfully!")
+    } else {
+      alert("Product is already in your wishlist.")
+    }
+  }
+
 
   // Select 2 items for recent views (dynamically pick other items)
   const recentProducts = products.filter((p) => p.id !== product.id).slice(0, 2)
@@ -51,6 +87,20 @@ export default function ProductMainDetails({ productId, col = "" }: ProductMainD
     product.imageUrl,
     product.hoverImageUrl
   ].filter(Boolean) as string[]
+
+  const getCategoryLink = (category: string, collection: string) => {
+    const cat = category.toLowerCase()
+    if (cat === "outerwear") {
+      return `/allProductCategories?category=${collection}&sub=Jackets %26 coats`
+    }
+    if (cat === "shirts") {
+      return `/allProductCategories?category=${collection}&sub=${collection === "men" ? "Shirts" : "Tops"}`
+    }
+    if (cat === "pants") {
+      return `/allProductCategories?category=${collection}&sub=${collection === "men" ? "Pants" : "Jeans"}`
+    }
+    return `/allProductCategories?category=${cat}`
+  }
 
   return (
     <section className="py-12 bg-white dark:bg-black">
@@ -66,7 +116,9 @@ export default function ProductMainDetails({ productId, col = "" }: ProductMainD
             </span>
           </Link>
           <span className="mx-2">/</span>
-          <span className="hover:text-zinc-900 dark:hover:text-zinc-100 transition">{product.category}</span>
+          <Link href={getCategoryLink(product.category, activeCollection)}>
+            <span className="hover:text-zinc-900 dark:hover:text-zinc-100 transition">{product.category}</span>
+          </Link>
           <span className="mx-2">/</span>
           <span className="text-zinc-900 dark:text-zinc-100">{product.name}</span>
         </div>
@@ -242,7 +294,10 @@ export default function ProductMainDetails({ productId, col = "" }: ProductMainD
                 </button>
               </div>
 
-              <button className="flex-1 h-10 bg-black text-white hover:bg-zinc-900 dark:bg-white dark:text-black dark:hover:bg-zinc-100 text-xs font-bold uppercase tracking-widest flex items-center justify-center transition-colors cursor-pointer select-none">
+              <button 
+                onClick={handleAddToCart}
+                className="flex-1 h-10 bg-black text-white hover:bg-zinc-900 dark:bg-white dark:text-black dark:hover:bg-zinc-100 text-xs font-bold uppercase tracking-widest flex items-center justify-center transition-colors cursor-pointer select-none"
+              >
                 Add to cart
               </button>
             </div>
@@ -253,7 +308,10 @@ export default function ProductMainDetails({ productId, col = "" }: ProductMainD
                 <Ruler className="h-3.5 w-3.5 stroke-[1.5]" />
                 Size Guide
               </button>
-              <button className="flex items-center gap-1.5 hover:text-zinc-950 dark:hover:text-zinc-50 cursor-pointer transition">
+              <button 
+                onClick={handleAddToWishlist}
+                className="flex items-center gap-1.5 hover:text-zinc-950 dark:hover:text-zinc-50 cursor-pointer transition"
+              >
                 <Heart className="h-3.5 w-3.5 stroke-[1.5]" />
                 Add to wishlist
               </button>
