@@ -10,7 +10,6 @@ import {
   Heart, 
   ShoppingBag, 
   ChevronDown,
-  Sparkles,
   X
 } from "lucide-react"
 
@@ -38,8 +37,28 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog"
-import { announcement, products, Product, CartItem } from "@/lib/data"
+import { products, Product, CartItem } from "@/lib/data"
 import Image from "next/image"
+
+// Inline Instagram SVG (lucide-react v1.x does not export Instagram)
+function InstagramIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  )
+}
 
 export function Header() {
   const pathname = usePathname()
@@ -53,6 +72,19 @@ export function Header() {
   const [cartItems, setCartItems] = React.useState<CartItem[]>([])
   const [searchQuery, setSearchQuery] = React.useState("")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
+  const [isFollowersOpen, setIsFollowersOpen] = React.useState(false)
+  const followersRef = React.useRef<HTMLDivElement>(null)
+
+  // Close followers dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (followersRef.current && !followersRef.current.contains(e.target as Node)) {
+        setIsFollowersOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   const isActive = (href: string) => {
     const normalize = (path: string) => path.replace(/\/$/, "") || "/"
@@ -163,10 +195,87 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md transition-all duration-300 dark:border-zinc-800 dark:bg-black/95">
-      {/* Top Banner (Optional micro-animation detail for a wowed effect) */}
-      <div className="flex h-9 w-full items-center justify-center bg-zinc-950 px-4 text-center text-xs font-medium tracking-wide text-zinc-100 dark:bg-zinc-900">
-        <Sparkles className="mr-1.5 h-3 w-3 text-amber-400 animate-pulse" />
-        <span>Mid-Season Sale: {announcement.discountText}. Use Code: <span className="font-bold underline text-amber-300">{announcement.code}</span></span>
+      {/* Top Bar - White bar with followers, shipping info, and order tracking */}
+      <div className="w-full border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+        <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+
+          {/* Left: Instagram Followers Dropdown */}
+          <div className="relative" ref={followersRef}>
+            <button
+              id="followers-dropdown-btn"
+              onClick={() => setIsFollowersOpen((v) => !v)}
+              className="flex items-center gap-1.5 text-[11px] font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-colors duration-150 cursor-pointer select-none"
+            >
+              <InstagramIcon className="h-3.5 w-3.5" />
+              <span className="font-semibold">3.1M Followers</span>
+              {isFollowersOpen
+                ? <ChevronDown className="h-3 w-3 text-zinc-400 rotate-180 transition-transform" />
+                : <ChevronDown className="h-3 w-3 text-zinc-400 transition-transform" />}
+            </button>
+
+            {/* Followers Dropdown Menu */}
+            {isFollowersOpen && (
+              <div
+                id="followers-dropdown-menu"
+                className="absolute top-full left-0 mt-1 z-50 w-48 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg rounded-sm overflow-hidden"
+              >
+                {/* Instagram */}
+                <a
+                  href="https://instagram.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 px-4 py-2.5 text-[11px] font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white transition-colors"
+                >
+                  <InstagramIcon className="h-3.5 w-3.5 text-[#E1306C]" />
+                  <span>Instagram</span>
+                  <span className="ml-auto text-zinc-400 dark:text-zinc-500 text-[10px]">3.1M</span>
+                </a>
+                {/* Facebook */}
+                <a
+                  href="https://facebook.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 px-4 py-2.5 text-[11px] font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white transition-colors"
+                >
+                  <svg className="h-3.5 w-3.5 fill-[#1877F2]" viewBox="0 0 24 24"><path d="M22.675 0H1.325C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116c.73 0 1.323-.593 1.323-1.325V1.325C24 .593 23.407 0 22.675 0z"/></svg>
+                  <span>Facebook</span>
+                  <span className="ml-auto text-zinc-400 dark:text-zinc-500 text-[10px]">820K</span>
+                </a>
+                {/* X / Twitter */}
+                <a
+                  href="https://x.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 px-4 py-2.5 text-[11px] font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white transition-colors"
+                >
+                  <svg className="h-3.5 w-3.5 fill-zinc-900 dark:fill-zinc-100" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  <span>X (Twitter)</span>
+                  <span className="ml-auto text-zinc-400 dark:text-zinc-500 text-[10px]">540K</span>
+                </a>
+              </div>
+            )}
+          </div>
+
+          {/* Center: Shipping Announcement */}
+          <p className="hidden sm:block text-[11px] font-normal text-zinc-600 dark:text-zinc-400 text-center">
+            Free Shipping World wide for all orders over $199.{" "}
+            <Link
+              href="/shop"
+              className="font-semibold text-[#df4a4a] hover:text-[#c43a3a] transition-colors duration-150"
+            >
+              Click and Shop Now.
+            </Link>
+          </p>
+
+          {/* Right: Order Tracking */}
+          <Link
+            id="order-tracking-link"
+            href="/order-tracking"
+            className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-colors duration-150 whitespace-nowrap"
+          >
+            Order Tracking
+          </Link>
+        </div>
       </div>
 
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
