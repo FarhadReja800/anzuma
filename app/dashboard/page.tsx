@@ -68,7 +68,7 @@ export default function DashboardPage() {
   } = useDashboardState()
 
   return (
-    <div className="flex-1 bg-[#fcfcfc] dark:bg-zinc-955 font-sans min-h-[calc(100vh-80px)] text-zinc-900 dark:text-zinc-100 flex relative overflow-hidden">
+    <div className="flex-1 bg-[#fcfcfc] dark:bg-zinc-950 font-sans min-h-[calc(100vh-80px)] text-zinc-900 dark:text-zinc-100 flex relative overflow-hidden">
       
       {/* Toast Alert */}
       {toastMessage && (
@@ -95,7 +95,7 @@ export default function DashboardPage() {
       />
 
       {/* 2. MAIN CONTENT AREA */}
-      <main className="flex-1 flex flex-col p-4 sm:p-6 md:p-8 lg:p-10 max-w-7xl mx-auto w-full overflow-x-hidden">
+      <main className="flex-1 flex flex-col p-4 sm:p-6 md:p-8 lg:p-10 w-full overflow-x-hidden">
         
         {/* Mobile Header Bar */}
         <div className="flex md:hidden items-center justify-between border-b pb-4 mb-6">

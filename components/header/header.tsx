@@ -779,12 +779,13 @@ export function Header() {
                         >
                           Clear
                         </Button>
-                        <Button 
-                          onClick={() => alert("Proceeding to Checkout...")}
-                          className="h-9 text-xs bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-black dark:hover:bg-zinc-200 rounded-xl font-medium"
-                        >
-                          Checkout
-                        </Button>
+                        <Link href="/checkout" className="w-full">
+                          <Button 
+                            className="w-full h-9 text-xs bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-black dark:hover:bg-zinc-200 rounded-xl font-medium"
+                          >
+                            Checkout
+                          </Button>
+                        </Link>
                       </div>
                     </div>
                   )}

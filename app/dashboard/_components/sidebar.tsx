@@ -82,7 +82,7 @@ export function Sidebar({
                 onClick={() => setActiveTab(item.id)}
                 className={`w-full flex items-center gap-3.5 px-4 py-3 text-[12px] font-bold uppercase tracking-wider transition-all duration-250 select-none cursor-pointer ${
                   isSelected
-                    ? "bg-zinc-955 text-white dark:bg-white dark:text-black shadow-sm"
+                    ? "bg-zinc-900 text-white dark:bg-white dark:text-black shadow-sm"
                     : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
                 }`}
               >
@@ -148,7 +148,7 @@ export function Sidebar({
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-all select-none cursor-pointer ${
                       isSelected
-                        ? "bg-zinc-955 text-white dark:bg-white dark:text-black"
+                        ? "bg-zinc-900 text-white dark:bg-white dark:text-black"
                         : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-450 dark:hover:text-white"
                     }`}
                   >

@@ -1,13 +1,14 @@
 import * as React from "react"
-import { HeroBanner } from "@/components/hero-banner"
-import BestSweatshirts from "@/components/bestSweatshirts"
-import Cenale from "@/components/cenale"
-import BestSweatshirtsCard from "@/components/BestSweatshirtsCard"
-import { TrustPoints } from "./_components/trust-points"
-import { FeaturedCarousel } from "./_components/featured-carousel"
-import { BestSellerCarousel } from "./_components/best-seller-carousel"
-import { LatestNews } from "./_components/latest-news"
-import { NewsletterPromo } from "./_components/newsletter-promo"
+import { HeroBanner } from "@/components/home/hero-banner"
+import BestSweatshirts from "@/components/home/best-sweatshirts"
+import Cenale from "@/components/home/cenale"
+import BestSweatshirtsCard from "@/components/home/best-sweatshirts-card"
+import { TrustPoints } from "@/components/home/trust-points"
+import { FeaturedCarousel } from "@/components/home/featured-carousel"
+import { BestSellerCarousel } from "@/components/home/best-seller-carousel"
+import { VideoBanner } from "@/components/home/video-banner"
+import { LatestNews } from "@/components/home/latest-news"
+import { NewsletterPromo } from "@/components/home/newsletter-promo"
 
 export default function Home() {
   return (
@@ -28,6 +29,9 @@ export default function Home() {
       {/* Best Seller Products Carousel */}
       <BestSellerCarousel />
 
+      {/* Background Video Section */}
+      <VideoBanner />
+
       {/* Best Sweatshirts Card Section */}
       <BestSweatshirtsCard />
 
@@ -39,3 +43,4 @@ export default function Home() {
     </div>
   )
 }
+

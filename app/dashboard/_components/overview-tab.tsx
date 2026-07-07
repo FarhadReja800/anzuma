@@ -79,34 +79,34 @@ export function OverviewTab({
   return (
     <div className="space-y-8 animate-fadeInFast">
       {/* Header banner card */}
-      <div className="bg-gradient-to-r from-zinc-900 to-zinc-955 border border-zinc-850 p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 text-white relative overflow-hidden">
+      <div className="bg-gray-100 border border-zinc-850 p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 text-white relative overflow-hidden">
         <div className="absolute right-0 bottom-0 top-0 opacity-10 flex items-center pointer-events-none">
           <Trophy className="h-64 w-64 translate-x-20 rotate-12 text-white" />
         </div>
         
         <div className="space-y-2 z-10">
           <div className="flex items-center gap-2">
-            <Calendar className="h-3.5 w-3.5 text-zinc-400" />
-            <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">
+            <Calendar className="h-4.5 w-4.5 text-black" />
+            <span className="text-sm font-semibold text-black uppercase tracking-widest">
               {new Date().toLocaleDateString("en-US", { weekday: 'long', month: 'short', day: 'numeric' })}
             </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-normal tracking-tight font-serif text-white">
+          <h1 className="text-xl sm:text-3xl font-normal tracking-tight font-serif text-black">
             Welcome back, <span className="font-bold text-[#df4a4a]">{user.name}</span>
           </h1>
-          <p className="text-[12px] text-zinc-400 max-w-lg font-light leading-relaxed">
+          <p className="text-sm text-black max-w-lg font-light leading-relaxed">
             You are currently logged into your VIP account. Benefit from exclusive members-only discounts, free returns, and 24/7 priority messaging desk.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 z-10 bg-zinc-900/60 border border-zinc-800 p-3 sm:p-4 shrink-0 shadow-lg">
+        <div className="flex items-center gap-3 z-10 bg-yellow-700/50  p-3 sm:p-4 shrink-0 shadow-xl rounded-[10px]">
           <div className="h-10 w-10 bg-[#df4a4a] flex items-center justify-center text-white">
             <Trophy className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-[9px] font-bold text-zinc-450 uppercase tracking-widest">Loyalty Level</div>
+            <div className="text-[12px] font-bold text-black uppercase tracking-widest">Loyalty Level</div>
             <div className="text-sm font-black tracking-wide text-white uppercase">{user.tier} Tier</div>
-            <div className="text-[10px] text-zinc-400 font-semibold">{user.points} Reward Points</div>
+            <div className="text-[12px] text-black font-semibold">{user.points} Reward Points</div>
           </div>
         </div>
       </div>
@@ -116,14 +116,14 @@ export function OverviewTab({
         {stats.map((m, idx) => {
           const Icon = m.icon
           return (
-            <div key={idx} className="bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-805 p-5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] flex flex-col justify-between">
+            <div key={idx} className="bg-white dark:bg-zinc-900 rounded-[10px] border border-zinc-150 dark:border-zinc-805 p-5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] flex flex-col justify-between">
               <div className="flex justify-between items-start">
-                <span className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">{m.label}</span>
+                <span className="text-sm font-medium text-black dark:text-zinc-500 uppercase tracking-wider">{m.label}</span>
                 <Icon className={`h-4.5 w-4.5 ${m.color}`} />
               </div>
               <div className="mt-4">
-                <div className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-955 dark:text-white font-serif">{m.val}</div>
-                <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 font-semibold flex items-center gap-1">
+                <div className="text-xl sm:text-3xl font-semibold font-sans tracking-tight text-zinc-955 dark:text-white font-serif">{m.val}</div>
+                <p className="text-[12px] text-zinc-500 dark:text-zinc-400 mt-1 font-semibold flex items-center gap-1">
                   <TrendingUp className="h-3 w-3 text-[#df4a4a]" />
                   {m.trend}
                 </p>
@@ -137,13 +137,13 @@ export function OverviewTab({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* SVG Area Chart */}
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-805 p-6 shadow-[0_1px_4px_rgba(0,0,0,0.02)] lg:col-span-2">
+        <div className="bg-white rounded-[10px] dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-805 p-6 shadow-[0_1px_4px_rgba(0,0,0,0.02)] lg:col-span-2">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-900 dark:text-white">Spending Analytics</h3>
-              <p className="text-[11px] text-zinc-400">Past 6 months purchase tracker (in USD)</p>
+              <h3 className="text-lg font-semibold font-sans uppercase tracking-wider text-black dark:text-white">Spending Analytics</h3>
+              <p className="text-[12px] text-black font-sans">Past 6 months purchase tracker (in USD)</p>
             </div>
-            <span className="text-[10px] font-bold text-[#df4a4a] border border-[#df4a4a]/25 px-2 py-0.5 tracking-wider bg-[#df4a4a]/5">
+            <span className="text-[8px] font-bold text-[#df4a4a] border border-[#df4a4a]/25 px-2 py-0.5 tracking-wider bg-[#df4a4a]/5">
               AUTO-UPDATES
             </span>
           </div>
@@ -229,8 +229,8 @@ export function OverviewTab({
         </div>
 
         {/* Recent Activity Feed */}
-        <div className="bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-805 p-6 shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-900 dark:text-white mb-5">
+        <div className="bg-white rounded-[10px] dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-805 p-6 shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
+          <h3 className="text-lg font-semibold font-sans uppercase tracking-wider text-zinc-900 dark:text-white mb-5">
             Recent Activities
           </h3>
           
@@ -248,8 +248,8 @@ export function OverviewTab({
                     <Icon className="h-3.5 w-3.5 text-[#df4a4a]" />
                   </div>
                   <div className="space-y-0.5">
-                    <p className="text-zinc-755 dark:text-zinc-300 font-medium">{act.text}</p>
-                    <span className="text-[10px] text-zinc-400 font-semibold">{act.time}</span>
+                    <p className="text-black text-sm font-sans dark:text-zinc-300 font-normal">{act.text}</p>
+                    <span className="text-[12px] text-zinc-400 font-medium">{act.time}</span>
                   </div>
                 </div>
               )

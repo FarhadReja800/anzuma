@@ -1,6 +1,6 @@
 import * as React from "react"
 import Link from "next/link"
-import { ShoppingBag, Clock } from "lucide-react"
+import { ShoppingBag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Order } from "./types"
 
@@ -29,6 +29,45 @@ export function OrdersTab({
     }
   }
 
+  const parseOrderDetails = (productStr: string) => {
+    let qty = "1"
+    let color = "Premium Black"
+    let size = "M"
+
+    const qtyMatch = productStr.match(/x\s*(\d+)/)
+    if (qtyMatch) {
+      qty = qtyMatch[1]
+    }
+
+    const parenMatch = productStr.match(/\(([^)]+)\)/)
+    if (parenMatch) {
+      const parts = parenMatch[1].split(",").map(s => s.trim())
+      if (parts.length === 2) {
+        const isSize = (str: string) => /^(S|M|L|XL|XXL|XS|2XL|[0-9]+)$/i.test(str)
+        if (isSize(parts[0])) {
+          size = parts[0]
+          color = parts[1]
+        } else if (isSize(parts[1])) {
+          size = parts[1]
+          color = parts[0]
+        } else {
+          color = parts[0]
+          size = parts[1]
+        }
+      } else if (parts.length === 1) {
+        color = parts[0]
+        size = "N/A"
+      }
+    } else {
+      if (productStr.toLowerCase().includes("bag")) {
+        color = "Tan Leather"
+        size = "One Size"
+      }
+    }
+
+    return { qty, color, size }
+  }
+
   return (
     <div className="space-y-6 animate-fadeInFast">
       <div>
@@ -55,50 +94,52 @@ export function OrdersTab({
         </div>
       ) : (
         <div className="space-y-5">
-          {orders.map((o) => (
-            <div 
-              key={o.id}
-              className="border border-zinc-150 dark:border-zinc-805 bg-white dark:bg-zinc-900/60 shadow-[0_1px_4px_rgba(0,0,0,0.01)]"
-            >
-              {/* Order Info Bar */}
-              <div className="bg-zinc-50 dark:bg-zinc-900/80 px-6 py-4 border-b border-zinc-150 dark:border-zinc-805 flex flex-wrap justify-between items-center gap-4 text-xs font-semibold">
-                <div className="flex items-center gap-6 flex-wrap">
-                  <div>
-                    <span className="text-[10px] text-zinc-400 dark:text-zinc-550 uppercase block">Order Placed</span>
-                    <span className="text-zinc-700 dark:text-zinc-300 font-bold">{o.date}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-zinc-400 dark:text-zinc-555 uppercase block">Total Amount</span>
-                    <span className="text-zinc-700 dark:text-zinc-300 font-bold">${o.price.toFixed(2)}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-zinc-400 dark:text-zinc-555 uppercase block">Order ID</span>
-                    <span className="font-mono text-zinc-900 dark:text-white font-bold">{o.id}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <span className={`text-[10px] font-bold px-3 py-1 border uppercase tracking-wider ${getStatusColor(o.status)}`}>
-                    {o.status}
-                  </span>
-                </div>
-              </div>
-
-              {/* Order Item Details */}
-              <div className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-                <div className="flex items-start gap-4">
-                  <div className="h-16 w-14 bg-zinc-100 dark:bg-zinc-800 shrink-0 border dark:border-zinc-700 flex items-center justify-center font-bold text-[10px] text-zinc-450 uppercase">
-                    {o.id.substring(0, 3)}
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="text-sm font-bold text-zinc-900 dark:text-white hover:underline cursor-pointer">
-                      {o.product}
-                    </h4>
-                    <div className="flex items-center gap-4 text-[11px] text-zinc-450 dark:text-zinc-500 font-medium">
-                      <span>Qty: 1</span>
-                      <span>Color: Premium Black</span>
-                      <span>Size: M</span>
+          {orders.map((o) => {
+            const details = parseOrderDetails(o.product)
+            return (
+              <div 
+                key={o.id}
+                className="border border-zinc-150 dark:border-zinc-805 bg-white dark:bg-zinc-900/60 shadow-[0_1px_4px_rgba(0,0,0,0.01)]"
+              >
+                {/* Order Info Bar */}
+                <div className="bg-zinc-50 dark:bg-zinc-900/80 px-6 py-4 border-b border-zinc-150 dark:border-zinc-805 flex flex-wrap justify-between items-center gap-4 text-xs font-semibold">
+                  <div className="flex items-center gap-6 flex-wrap">
+                    <div>
+                      <span className="text-[10px] text-zinc-400 dark:text-zinc-550 uppercase block">Order Placed</span>
+                      <span className="text-zinc-700 dark:text-zinc-300 font-bold">{o.date}</span>
                     </div>
+                    <div>
+                      <span className="text-[10px] text-zinc-400 dark:text-zinc-555 uppercase block">Total Amount</span>
+                      <span className="text-zinc-700 dark:text-zinc-300 font-bold">${o.price.toFixed(2)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-zinc-400 dark:text-zinc-555 uppercase block">Order ID</span>
+                      <span className="font-mono text-zinc-900 dark:text-white font-bold">{o.id}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <span className={`text-[10px] font-bold px-3 py-1 border uppercase tracking-wider ${getStatusColor(o.status)}`}>
+                      {o.status}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Order Item Details */}
+                <div className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+                  <div className="flex items-start gap-4">
+                    <div className="h-16 w-14 bg-zinc-100 dark:bg-zinc-800 shrink-0 border dark:border-zinc-700 flex items-center justify-center font-bold text-[10px] text-zinc-450 uppercase">
+                      {o.id.substring(0, 3)}
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-bold text-zinc-900 dark:text-white hover:underline cursor-pointer">
+                        {o.product}
+                      </h4>
+                      <div className="flex items-center gap-4 text-[11px] text-zinc-450 dark:text-zinc-500 font-medium">
+                        <span>Qty: {details.qty}</span>
+                        <span>Color: {details.color}</span>
+                        <span>Size: {details.size}</span>
+                      </div>
                     {o.trackingId && (
                       <div className="text-[10px] text-zinc-400 font-mono mt-1">
                         Tracking ID: <span className="font-bold text-zinc-600 dark:text-zinc-300">{o.trackingId}</span>
@@ -137,9 +178,10 @@ export function OrdersTab({
                     Invoice PDF
                   </Button>
                 </div>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

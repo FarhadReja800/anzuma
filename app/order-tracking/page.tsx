@@ -47,6 +47,43 @@ export default function OrderTrackingPage() {
   const [orderData, setOrderData] = React.useState<MockOrder | null>(null)
   const [isLoading, setIsLoading] = React.useState(false)
 
+  // Auto-fill and track from search query parameters on mount
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search)
+      const qOrderId = params.get("orderId") || ""
+      const qEmail = params.get("email") || ""
+      if (qOrderId && qEmail) {
+        // Defer synchronous state updates to the next event loop tick to avoid cascading renders
+        const initialTimer = setTimeout(() => {
+          setOrderId(qOrderId)
+          setEmail(qEmail)
+          setIsLoading(true)
+          setResult(null)
+          setOrderData(null)
+        }, 0)
+
+        const fetchTimer = setTimeout(() => {
+          const key = qOrderId.trim().toUpperCase()
+          const customOrders = JSON.parse(localStorage.getItem("custom_orders") || "{}")
+          const order = customOrders[key] || MOCK_ORDERS[key]
+          if (order && order.email.toLowerCase() === qEmail.trim().toLowerCase()) {
+            setOrderData(order)
+            setResult("found")
+          } else {
+            setResult("not-found")
+          }
+          setIsLoading(false)
+        }, 900)
+
+        return () => {
+          clearTimeout(initialTimer)
+          clearTimeout(fetchTimer)
+        }
+      }
+    }
+  }, [])
+
   const handleTrack = (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -56,7 +93,8 @@ export default function OrderTrackingPage() {
     // Simulate async look-up with a short delay
     setTimeout(() => {
       const key = orderId.trim().toUpperCase()
-      const order = MOCK_ORDERS[key]
+      const customOrders = JSON.parse(localStorage.getItem("custom_orders") || "{}")
+      const order = customOrders[key] || MOCK_ORDERS[key]
       if (order && order.email.toLowerCase() === email.trim().toLowerCase()) {
         setOrderData(order)
         setResult("found")
