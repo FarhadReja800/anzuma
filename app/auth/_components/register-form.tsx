@@ -2,9 +2,11 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Eye, EyeOff } from "lucide-react"
 
 export function RegisterForm() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = React.useState(false)
   const [username, setUsername] = React.useState("")
   const [email, setEmail] = React.useState("")
@@ -12,7 +14,21 @@ export function RegisterForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    alert("Registering user: " + username + " (" + email + ")")
+    
+    // Save new mock user session
+    const formattedName = username.charAt(0).toUpperCase() + username.slice(1)
+    const mockUser = {
+      name: formattedName || "Farhad Reja",
+      email: email,
+      tier: "Bronze", // Newly registered start at Bronze
+      points: 100 // Starting gift points
+    }
+    localStorage.setItem("arzuma_user", JSON.stringify(mockUser))
+    
+    // Dispatch storage event to notify header/other components
+    window.dispatchEvent(new Event("storage"))
+    
+    router.push("/dashboard")
   }
 
   return (

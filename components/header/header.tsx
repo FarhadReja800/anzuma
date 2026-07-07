@@ -73,6 +73,7 @@ export function Header() {
   const [searchQuery, setSearchQuery] = React.useState("")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
   const [isFollowersOpen, setIsFollowersOpen] = React.useState(false)
+  const [user, setUser] = React.useState<{ name: string; email: string; tier: string } | null>(null)
   const followersRef = React.useRef<HTMLDivElement>(null)
 
   // Close followers dropdown when clicking outside
@@ -124,6 +125,18 @@ export function Header() {
       const items = products.filter((p) => wishlist.includes(p.id))
       setWishlistCount(wishlist.length)
       setWishlistItems(items)
+
+      // Sync User Session
+      const storedUser = localStorage.getItem("arzuma_user")
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser))
+        } catch (e) {
+          setUser(null)
+        }
+      } else {
+        setUser(null)
+      }
     }
 
     syncStorage()
@@ -309,7 +322,7 @@ export function Header() {
               </SheetHeader>
               
               {/* Mobile Drawer Menu Links */}
-              <div className="flex-1 overflow-y-auto py-6 px-6 space-y-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <div className="flex-1 overflow-y-auto py-6 px-6 space-y-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-none]">
                 <div className="space-y-4">
                   <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Categories</h3>
                   <nav className="flex flex-col gap-3">
@@ -391,11 +404,11 @@ export function Header() {
                   <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Account & Wishlist</h3>
                   <div className="flex flex-col gap-3">
                     <Link
-                      href="/auth?mode=login"
+                      href={user ? "/dashboard" : "/auth?mode=login"}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className="flex w-full items-center justify-between rounded-lg bg-zinc-50 px-4 py-3 text-sm font-semibold text-zinc-900 hover:bg-zinc-100 transition dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
                     >
-                      <span>My Account / Login</span>
+                      <span>{user ? "My Dashboard" : "My Account / Login"}</span>
                       <User className="h-4 w-4 text-zinc-500" />
                     </Link>
                     <div className="flex flex-col gap-1.5 bg-zinc-50 dark:bg-zinc-900 rounded-lg p-3">
@@ -411,7 +424,7 @@ export function Header() {
                               <Link 
                                 href={`/shop?id=${item.id}`}
                                 onClick={() => setIsMobileMenuOpen(false)}
-                                className="text-zinc-800 dark:text-zinc-200 hover:underline truncate max-w-[150px]"
+                                className="text-zinc-800 dark:text-zinc-200 hover:underline truncate max-w-37.5"
                               >
                                 {item.name}
                               </Link>
@@ -459,8 +472,8 @@ export function Header() {
                     <User className="h-5 w-5" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Guest User</h4>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">welcome@clotya.com</p>
+                    <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{user ? user.name : "Guest User"}</h4>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">{user ? user.email : "welcome@clotya.com"}</p>
                   </div>
                 </div>
               </div>
@@ -475,7 +488,7 @@ export function Header() {
                 alt="Arzuma Logo"
                 width={120}
                 height={40}
-                className="inline-block mr-1 max-w-[90px] sm:max-w-[120px] h-auto"
+                className="inline-block mr-1 max-w-22.5 sm:max-w-30 h-auto"
               />
               <span className="text-[10px] font-bold text-zinc-500 align-super">®</span>
             </span>
@@ -488,12 +501,13 @@ export function Header() {
           {/* HOME Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="group flex items-center gap-1 text-[13px] font-bold tracking-widest text-zinc-900 hover:text-zinc-500 transition-colors duration-200 dark:text-zinc-100 dark:hover:text-zinc-400 outline-none cursor-pointer">
+             <Link href="/" className="group flex items-center gap-1 text-[13px] font-bold tracking-widest text-zinc-900 hover:text-zinc-500 transition-colors duration-200 dark:text-zinc-100 dark:hover:text-zinc-400 outline-none cursor-pointer">
                 <span>HOME</span>
-                <ChevronDown className="h-3 w-3 text-zinc-400 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-              </button>
+         
+                {/* <ChevronDown className="h-3 w-3 text-zinc-400 transition-transform duration-200 group-data-[state=open]:rotate-180" /> */}
+              </Link>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56 p-2 bg-white dark:bg-zinc-950 border border-zinc-200/50 dark:border-zinc-800 rounded-xl shadow-xl">
+            {/* <DropdownMenuContent align="start" className="w-56 p-2 bg-white dark:bg-zinc-950 border border-zinc-200/50 dark:border-zinc-800 rounded-xl shadow-xl">
               <DropdownMenuLabel className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 px-3 py-2">Layout Styles</DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-900" />
               <DropdownMenuItem className="rounded-lg px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer">
@@ -505,7 +519,7 @@ export function Header() {
               <DropdownMenuItem className="rounded-lg px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer">
                 <Link href="/" className="w-full text-xs font-semibold text-zinc-700 dark:text-zinc-300">Grid Directory</Link>
               </DropdownMenuItem>
-            </DropdownMenuContent>
+            </DropdownMenuContent> */}
           </DropdownMenu>
 
           {/* SHOP Dropdown */}
@@ -536,7 +550,7 @@ export function Header() {
             href="/allProductCategories?category=women"
             className={`relative text-[13px] font-bold tracking-widest transition-colors duration-200 ${
               isActive("/allProductCategories?category=women")
-                ? "text-zinc-950 dark:text-white after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-zinc-950 dark:after:bg-white"
+                ? "text-zinc-950 dark:text-white after:absolute after:bottom-1 after:left-0 after:w-full after:h-0.5 after:bg-zinc-950 dark:after:bg-white"
                 : "text-zinc-900 hover:text-zinc-500 dark:text-zinc-100 dark:hover:text-zinc-400"
             }`}
           >
@@ -546,7 +560,7 @@ export function Header() {
             href="/allProductCategories?category=men"
             className={`relative text-[13px] font-bold tracking-widest transition-colors duration-200 ${
               isActive("/allProductCategories?category=men")
-                ? "text-zinc-950 dark:text-white after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-zinc-950 dark:after:bg-white"
+                ? "text-zinc-950 dark:text-white after:absolute after:bottom-1 after:left-0 after:w-full after:h-0.5 after:bg-zinc-950 dark:after:bg-white"
                 : "text-zinc-900 hover:text-zinc-500 dark:text-zinc-100 dark:hover:text-zinc-400"
             }`}
           >
@@ -556,7 +570,7 @@ export function Header() {
             href="/outerwear"
             className={`relative text-[13px] font-bold tracking-widest transition-colors duration-200 ${
               isActive("/outerwear")
-                ? "text-zinc-950 dark:text-white after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-zinc-950 dark:after:bg-white"
+                ? "text-zinc-950 dark:text-white after:absolute after:bottom-1 after:left-0 after:w-full after:h-0.5 after:bg-zinc-950 dark:after:bg-white"
                 : "text-zinc-900 hover:text-zinc-500 dark:text-zinc-100 dark:hover:text-zinc-400"
             }`}
           >
@@ -566,7 +580,7 @@ export function Header() {
             href="/blog"
             className={`relative text-[13px] font-bold tracking-widest transition-colors duration-200 ${
               isActive("/blog")
-                ? "text-zinc-950 dark:text-white after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-zinc-950 dark:after:bg-white"
+                ? "text-zinc-950 dark:text-white after:absolute after:bottom-1 after:left-0 after:w-full after:h-0.5 after:bg-zinc-950 dark:after:bg-white"
                 : "text-zinc-900 hover:text-zinc-500 dark:text-zinc-100 dark:hover:text-zinc-400"
             }`}
           >
@@ -576,7 +590,7 @@ export function Header() {
             href="/contact"
             className={`relative text-[13px] font-bold tracking-widest transition-colors duration-200 ${
               isActive("/contact")
-                ? "text-zinc-950 dark:text-white after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-zinc-950 dark:after:bg-white"
+                ? "text-zinc-950 dark:text-white after:absolute after:bottom-1 after:left-0 after:w-full after:h-0.5 after:bg-zinc-950 dark:after:bg-white"
                 : "text-zinc-900 hover:text-zinc-500 dark:text-zinc-100 dark:hover:text-zinc-400"
             }`}
           >
@@ -586,10 +600,10 @@ export function Header() {
 
         {/* Right Side: Account, Search, Wishlist, Cart & Price */}
         <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
-                  {/* User Account Link (Redirects to Login form) */}
-          <Link href="/auth?mode=login" className="hidden sm:block">
+          {/* User Account Link (Redirects to Login/Dashboard) */}
+          <Link href={user ? "/dashboard" : "/auth?mode=login"} className="hidden sm:block">
             <Button variant="ghost" size="icon" className="h-10 w-10 text-zinc-800 hover:bg-zinc-100 hover:text-black dark:text-zinc-200 dark:hover:bg-zinc-900 dark:hover:text-white rounded-full">
-              <User className="h-[21px] w-[21px] stroke-[1.5]" />
+              <User className="h-5.25 w-5.25 stroke-[1.5]" />
               <span className="sr-only">Account</span>
             </Button>
           </Link>
@@ -598,7 +612,7 @@ export function Header() {
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="ghost" size="icon" className="h-10 w-10 text-zinc-800 hover:bg-zinc-100 hover:text-black dark:text-zinc-200 dark:hover:bg-zinc-900 dark:hover:text-white rounded-full">
-                <Search className="h-[21px] w-[21px] stroke-[1.5]" />
+                <Search className="h-5.25 w-5.25 stroke-[1.5]" />
                 <span className="sr-only">Search</span>
               </Button>
             </DialogTrigger>
@@ -644,7 +658,7 @@ export function Header() {
                 <button 
                   className="group relative flex h-10 w-10 items-center justify-center rounded-full text-zinc-800 hover:bg-zinc-100 hover:text-black dark:text-zinc-200 dark:hover:bg-zinc-900 dark:hover:text-white transition-all cursor-pointer outline-none"
                 >
-                  <Heart className="h-[21px] w-[21px] stroke-[1.5] transition-transform duration-200 group-hover:scale-110" />
+                  <Heart className="h-5.25 w-5.25 stroke-[1.5] transition-transform duration-200 group-hover:scale-110" />
                   {wishlistCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#f43f5e] text-[9px] font-bold text-white ring-2 ring-white dark:ring-black animate-scaleIn">
                       {wishlistCount}
@@ -674,7 +688,7 @@ export function Header() {
                               {item.name.substring(0, 3)}
                             </div>
                             <div>
-                              <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate max-w-[120px]">{item.name}</p>
+                              <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate max-w-30">{item.name}</p>
                               <p className="text-[10px] text-zinc-500 dark:text-zinc-400">${item.price.toFixed(2)}</p>
                             </div>
                           </div>
@@ -711,7 +725,7 @@ export function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="group relative flex h-10 w-10 items-center justify-center rounded-full text-zinc-800 hover:bg-zinc-100 hover:text-black dark:text-zinc-200 dark:hover:bg-zinc-900 dark:hover:text-white transition-all cursor-pointer outline-none">
-                  <ShoppingBag className="h-[21px] w-[21px] stroke-[1.5] transition-transform duration-200 group-hover:scale-110" />
+                  <ShoppingBag className="h-5.25 w-5.25 stroke-[1.5] transition-transform duration-200 group-hover:scale-110" />
                   {cartCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-zinc-950 text-[9px] font-bold text-white ring-2 ring-white dark:bg-white dark:text-black dark:ring-black animate-scaleIn">
                       {cartCount}
@@ -742,7 +756,7 @@ export function Header() {
                                 {item.name.substring(0, 3)}
                               </div>
                               <div>
-                                <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate max-w-[120px]">{item.name}</p>
+                                <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate max-w-30">{item.name}</p>
                                 <p className="text-[10px] text-zinc-550 dark:text-zinc-450">Size: {item.size} | Color: {item.color}</p>
                                 <p className="text-[10px] text-zinc-550 dark:text-zinc-450">Qty: {item.qty} × ${item.price.toFixed(2)}</p>
                               </div>

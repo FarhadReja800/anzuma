@@ -2,9 +2,11 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Eye, EyeOff } from "lucide-react"
 
 export function LoginForm() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = React.useState(false)
   const [identifier, setIdentifier] = React.useState("")
   const [password, setPassword] = React.useState("")
@@ -12,7 +14,22 @@ export function LoginForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    alert("Logging in with: " + identifier)
+    
+    // Save mock user session
+    const username = identifier.split("@")[0]
+    const formattedName = username.charAt(0).toUpperCase() + username.slice(1)
+    const mockUser = {
+      name: formattedName || "Farhad Reja",
+      email: identifier.includes("@") ? identifier : `${identifier}@arzuma.com`,
+      tier: "Gold",
+      points: 1250
+    }
+    localStorage.setItem("arzuma_user", JSON.stringify(mockUser))
+    
+    // Dispatch storage event to notify header/other components
+    window.dispatchEvent(new Event("storage"))
+    
+    router.push("/dashboard")
   }
 
   return (
