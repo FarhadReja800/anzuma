@@ -13,7 +13,7 @@ interface VideoBannerProps {
 }
 
 export function VideoBanner({
-  videoUrl = "/video/bibidi%20banner%20v4.mp4",
+  videoUrl = "/video/zara.mp4",
   subtitle = "EXPERIENCE THE VIBE",
   title = "Aesthetics in Motion",
   description = "Explore our premium streetwear collection designed for absolute comfort and timeless expression. Made from sustainably sourced organic cotton with a modern fit.",
@@ -21,7 +21,7 @@ export function VideoBanner({
   buttonLink = "/shop",
 }: VideoBannerProps) {
   return (
-    <section className="relative w-full h-[500px] sm:h-[600px] overflow-hidden flex items-center justify-center font-sans">
+    <section className="relative w-full h-[500px] sm:h-[900px] overflow-hidden flex items-center justify-center font-sans">
       {/* Background Video */}
       <video
         autoPlay
@@ -35,7 +35,7 @@ export function VideoBanner({
       </video>
 
       {/* Dark Overlay with Blur */}
-      <div className="absolute inset-0 bg-black/45 dark:bg-black/60 backdrop-blur-[1px] z-10" />
+      {/* <div className="absolute inset-0 bg-black/45 dark:bg-black/60 backdrop-blur-[1px] z-10" /> */}
 
       {/* Content Container */}
       <div className="relative z-20 max-w-4xl mx-auto px-6 text-center space-y-6 text-white">
