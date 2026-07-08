@@ -48,6 +48,8 @@ export default function CheckoutPage() {
   
   // Success Order State
   const [orderId, setOrderId] = React.useState("")
+  const [orderedItems, setOrderedItems] = React.useState<CartItem[]>([])
+  const [orderedTotal, setOrderedTotal] = React.useState<number>(0)
 
   // Sync Cart items on mount
   React.useEffect(() => {
@@ -83,6 +85,10 @@ export default function CheckoutPage() {
     // Generate order ID
     const newOrderId = `ORD-${Math.floor(10000 + Math.random() * 90000)}`
     setOrderId(newOrderId)
+    
+    // Save current cart state for invoice before clearing cart
+    setOrderedItems(cartItems)
+    setOrderedTotal(cartTotal)
     
     // Format product string
     const productStr = cartItems.map(item => `${item.name} (${item.size}, ${item.color}) x${item.qty}`).join(", ")
@@ -256,6 +262,9 @@ export default function CheckoutPage() {
                 address={shippingInfo.address} 
                 city={shippingInfo.city} 
                 paymentMethod={paymentMethod} 
+                shippingInfo={shippingInfo}
+                cartItems={orderedItems}
+                cartTotal={orderedTotal}
               />
             )}
 
