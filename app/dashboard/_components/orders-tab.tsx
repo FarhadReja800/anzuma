@@ -129,7 +129,7 @@ export function OrdersTab({
                 <div className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                   <div className="flex items-start gap-4">
                     <div className="h-16 w-14 bg-zinc-100 dark:bg-zinc-800 shrink-0 border dark:border-zinc-700 flex items-center justify-center font-bold text-[10px] text-zinc-450 uppercase">
-                      {o.id.substring(0, 3)}
+                      ORD
                     </div>
                     <div className="space-y-1">
                       <h4 className="text-sm font-bold text-zinc-900 dark:text-white hover:underline cursor-pointer">

@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { ShieldCheck, Menu } from "lucide-react"
+import { ShieldCheck } from "lucide-react"
 
-import { Sidebar } from "./_components/sidebar"
+import { DashboardShell } from "./_components/dashboard-shell"
 import { OverviewTab } from "./_components/overview-tab"
 import { OrdersTab } from "./_components/orders-tab"
 import { WishlistTab } from "./_components/wishlist-tab"
@@ -13,7 +13,33 @@ import { SupportTab } from "./_components/support-tab"
 import { SettingsTab } from "./_components/settings-tab"
 import { useDashboardState } from "./_hooks/use-dashboard-state"
 
+import { SuperAdminView } from "./_components/roles/super-admin/index"
+import { AdminView } from "./_components/roles/admin/index"
+import { ManagerView } from "./_components/roles/manager/index"
+import { ModeratorView } from "./_components/roles/moderator/index"
+
+const emptySubscribe = () => () => {}
+const getSnapshot = () => true
+const getServerSnapshot = () => false
+
 export default function DashboardPage() {
+  const state = useDashboardState()
+  const mounted = React.useSyncExternalStore(
+    emptySubscribe,
+    getSnapshot,
+    getServerSnapshot
+  )
+
+  if (!mounted) {
+    return (
+      <div className="flex-1 bg-[#fcfcfc] dark:bg-zinc-950 flex items-center justify-center min-h-[calc(100vh-80px)]">
+        <div className="text-xs font-bold uppercase tracking-widest text-zinc-400 animate-pulse">
+          Loading Security Session...
+        </div>
+      </div>
+    )
+  }
+
   const {
     user,
     activeTab,
@@ -43,8 +69,6 @@ export default function DashboardPage() {
     showPasswordFields,
     toastMessage,
     copiedVoucher,
-    sidebarOpen,
-    setSidebarOpen,
     isEditingBilling,
     isEditingShipping,
     setIsEditingBilling,
@@ -65,162 +89,126 @@ export default function DashboardPage() {
     handleRemoveFromWishlist,
     handleAddToCart,
     triggerToast
-  } = useDashboardState()
+  } = state
 
+  // If user has system role, render the specialized admin dashboards
+  if (user && user.role === "superAdmin") {
+    return <SuperAdminView user={user} handleLogout={handleLogout} />
+  }
+  if (user && user.role === "admin") {
+    return <AdminView user={user} handleLogout={handleLogout} />
+  }
+  if (user && user.role === "manager") {
+    return <ManagerView user={user} handleLogout={handleLogout} />
+  }
+  if (user && user.role === "moderator") {
+    return <ModeratorView user={user} handleLogout={handleLogout} />
+  }
   return (
-    <div className="flex-1 bg-[#fcfcfc] dark:bg-zinc-950 font-sans min-h-[calc(100vh-80px)] text-zinc-900 dark:text-zinc-100 flex relative overflow-hidden">
-      
+    <DashboardShell
+      user={user}
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
+      handleLogout={handleLogout}
+      title="Dashboard"
+      badgeText={user.tier.toUpperCase()}
+      ordersCount={orders.length}
+      wishlistCount={wishlist.length}
+      ticketsCount={tickets.length}
+    >
       {/* Toast Alert */}
       {toastMessage && (
         <div 
-          className="fixed bottom-6 right-6 z-50 bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-xs py-3.5 px-5 shadow-2xl flex items-center gap-2 border border-zinc-800 dark:border-zinc-200"
-          style={{ animation: "fadeInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}
+          className="fixed bottom-6 right-6 z-50 bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-xs py-3.5 px-5 shadow-2xl flex items-center gap-2 border border-zinc-800 dark:border-zinc-200 rounded-lg animate-fadeInFast"
         >
-          <ShieldCheck className="h-4 w-4 text-[#df4a4a]" />
+          <ShieldCheck className="h-4 w-4 text-emerald-505" />
           <span className="font-semibold tracking-wide">{toastMessage}</span>
         </div>
       )}
 
-      {/* 1. SIDEBAR (Desktop & Mobile Drawer) */}
-      <Sidebar 
-        user={user}
-        ordersCount={orders.length}
-        wishlistCount={wishlist.length}
-        ticketsCount={tickets.length}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        handleLogout={handleLogout}
-      />
+      {/* TAB CONTENTS */}
+      {activeTab === "overview" && (
+        <OverviewTab 
+          user={user}
+          orders={orders}
+          wishlistCount={wishlist.length}
+          ticketsCount={tickets.length}
+        />
+      )}
 
-      {/* 2. MAIN CONTENT AREA */}
-      <main className="flex-1 flex flex-col p-4 sm:p-6 md:p-8 lg:p-10 w-full overflow-x-hidden">
-        
-        {/* Mobile Header Bar */}
-        <div className="flex md:hidden items-center justify-between border-b pb-4 mb-6">
-          <button 
-            onClick={() => setSidebarOpen(true)}
-            className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-zinc-805 dark:text-zinc-200 cursor-pointer"
-          >
-            <Menu className="h-5 w-5 text-[#df4a4a]" />
-            Menu
-          </button>
-          <span className="text-[10px] font-bold uppercase bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 text-zinc-650 dark:text-zinc-300 tracking-wider">
-            VIP {user.tier}
-          </span>
-        </div>
+      {activeTab === "orders" && (
+        <OrdersTab 
+          orders={orders}
+          handleCancelOrder={handleCancelOrder}
+          triggerToast={triggerToast}
+        />
+      )}
 
-        {/* TAB CONTENTS */}
-        {activeTab === "overview" && (
-          <OverviewTab 
-            user={user}
-            orders={orders}
-            wishlistCount={wishlist.length}
-            ticketsCount={tickets.length}
-          />
-        )}
+      {activeTab === "wishlist" && (
+        <WishlistTab 
+          wishlist={wishlist}
+          handleRemoveFromWishlist={handleRemoveFromWishlist}
+          handleAddToCart={handleAddToCart}
+        />
+      )}
 
-        {activeTab === "orders" && (
-          <OrdersTab 
-            orders={orders}
-            handleCancelOrder={handleCancelOrder}
-            triggerToast={triggerToast}
-          />
-        )}
+      {activeTab === "addresses" && (
+        <AddressesTab 
+          billingAddress={billingAddress}
+          shippingAddress={shippingAddress}
+          billingForm={billingForm}
+          shippingForm={shippingForm}
+          setBillingForm={setBillingForm}
+          setShippingForm={setShippingForm}
+          isEditingBilling={isEditingBilling}
+          isEditingShipping={isEditingShipping}
+          setIsEditingBilling={setIsEditingBilling}
+          setIsEditingShipping={setIsEditingShipping}
+          handleSaveBilling={handleSaveBilling}
+          handleSaveShipping={handleSaveShipping}
+        />
+      )}
 
-        {activeTab === "wishlist" && (
-          <WishlistTab 
-            wishlist={wishlist}
-            handleRemoveFromWishlist={handleRemoveFromWishlist}
-            handleAddToCart={handleAddToCart}
-          />
-        )}
+      {activeTab === "rewards" && (
+        <RewardsTab 
+          user={user}
+          copiedVoucher={copiedVoucher}
+          handleCopyVoucher={handleCopyVoucher}
+        />
+      )}
 
-        {activeTab === "addresses" && (
-          <AddressesTab 
-            billingAddress={billingAddress}
-            shippingAddress={shippingAddress}
-            billingForm={billingForm}
-            shippingForm={shippingForm}
-            setBillingForm={setBillingForm}
-            setShippingForm={setShippingForm}
-            isEditingBilling={isEditingBilling}
-            isEditingShipping={isEditingShipping}
-            setIsEditingBilling={setIsEditingBilling}
-            setIsEditingShipping={setIsEditingShipping}
-            handleSaveBilling={handleSaveBilling}
-            handleSaveShipping={handleSaveShipping}
-          />
-        )}
+      {activeTab === "support" && (
+        <SupportTab 
+          tickets={tickets}
+          ticketSubject={ticketSubject}
+          ticketCategory={ticketCategory}
+          ticketPriority={ticketPriority}
+          ticketMessage={ticketMessage}
+          setTicketSubject={setTicketSubject}
+          setTicketCategory={setTicketCategory}
+          setTicketPriority={setTicketPriority}
+          setTicketMessage={setTicketMessage}
+          handleCreateTicket={handleCreateTicket}
+        />
+      )}
 
-        {activeTab === "rewards" && (
-          <RewardsTab 
-            user={user}
-            copiedVoucher={copiedVoucher}
-            handleCopyVoucher={handleCopyVoucher}
-          />
-        )}
-
-        {activeTab === "support" && (
-          <SupportTab 
-            tickets={tickets}
-            ticketSubject={ticketSubject}
-            ticketCategory={ticketCategory}
-            ticketPriority={ticketPriority}
-            ticketMessage={ticketMessage}
-            setTicketSubject={setTicketSubject}
-            setTicketCategory={setTicketCategory}
-            setTicketPriority={setTicketPriority}
-            setTicketMessage={setTicketMessage}
-            handleCreateTicket={handleCreateTicket}
-          />
-        )}
-
-        {activeTab === "settings" && (
-          <SettingsTab 
-            profileName={profileName}
-            profileEmail={profileEmail}
-            profilePhone={profilePhone}
-            currentPassword={currentPassword}
-            newPassword={newPassword}
-            showPasswordFields={showPasswordFields}
-            setProfileName={setProfileName}
-            setProfileEmail={setProfileEmail}
-            setProfilePhone={setProfilePhone}
-            setCurrentPassword={setCurrentPassword}
-            setNewPassword={setNewPassword}
-            setShowPasswordFields={setShowPasswordFields}
-            handleSaveProfile={handleSaveProfile}
-          />
-        )}
-
-      </main>
-
-      {/* Embedded Animations and Keyframe Styles */}
-      <style>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(12px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideRight {
-          from { transform: translateX(-100%); }
-          to   { transform: translateX(0); }
-        }
-        @keyframes slideDown {
-          from { height: 0; opacity: 0; overflow: hidden; }
-          to   { height: auto; opacity: 1; }
-        }
-        .animate-fadeInFast {
-          animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        .animate-slideRight {
-          animation: slideRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        .animate-slideDown {
-          animation: slideDown 0.25s ease-out forwards;
-        }
-      `}</style>
-    </div>
+      {activeTab === "settings" && (
+        <SettingsTab 
+          profileName={profileName}
+          profileEmail={profileEmail}
+          profilePhone={profilePhone}
+          currentPassword={currentPassword}
+          newPassword={newPassword}
+          showPasswordFields={showPasswordFields}
+          setProfileName={setProfileName}
+          setProfileEmail={setProfileEmail}
+          setProfilePhone={setProfilePhone}
+          setCurrentPassword={setCurrentPassword}
+          setNewPassword={setNewPassword}
+          setShowPasswordFields={setShowPasswordFields}
+          handleSaveProfile={handleSaveProfile}
+        />
+      )}
+    </DashboardShell>
   )
 }

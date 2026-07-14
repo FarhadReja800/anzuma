@@ -1,262 +1,322 @@
+"use client"
+
 import * as React from "react"
 import { 
-  Trophy, 
-  ShoppingBag, 
-  Heart, 
-  LifeBuoy, 
-  Clock, 
-  MapPin, 
-  Calendar, 
-  TrendingUp 
+  ShoppingBag,
+  Truck,
+  Heart,
+  HelpCircle,
+  Star,
+  Package,
+  CheckCircle2,
+  Info,
+  Calendar,
+  TrendingUp,
 } from "lucide-react"
 import { DashboardUser, Order } from "./types"
 
 interface OverviewTabProps {
   user: DashboardUser
-  orders: Order[]
-  wishlistCount: number
-  ticketsCount: number
+  orders?: Order[]
+  wishlistCount?: number
+  ticketsCount?: number
 }
 
 export function OverviewTab({
   user,
-  orders,
-  wishlistCount,
-  ticketsCount
+  orders: propOrders,
+  wishlistCount = 0,
+  ticketsCount = 0
 }: OverviewTabProps) {
-  
-  const totalSpending = orders.reduce(
-    (sum, o) => sum + (o.status !== "Cancelled" ? o.price : 0), 
-    0
+
+  const [orders, setOrders] = React.useState<Order[]>(propOrders || [])
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      const storedOrders = localStorage.getItem("arzuma_orders")
+      if (storedOrders) {
+        setOrders(JSON.parse(storedOrders))
+      } else if (propOrders) {
+        setOrders(propOrders)
+      }
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [propOrders])
+
+  // Derived stats
+  const totalSpend = orders.reduce((sum, o) => o.status !== "Cancelled" ? sum + o.price : sum, 0)
+  const purchaseVolume = totalSpend > 0 ? totalSpend : 118.99
+  const pendingShipments = orders.filter(o => o.status === "Processing" || o.status === "Shipped").length
+  const openTickets = ticketsCount
+
+  // Today's date
+  const now = new Date()
+  const dateStr = now.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }).toUpperCase()
+
+  // Spending chart data (monthly, last 6 months)
+  const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN"]
+  const spendData = [30, 55, 95, 140, 200, 165]
+  const maxSpend = Math.max(...spendData)
+
+  const chartW = 500
+  const chartH = 180
+  const padX = 30
+  const padY = 20
+  const usableW = chartW - padX * 2
+  const usableH = chartH - padY * 2
+
+  const points = spendData.map((val, i) => ({
+    x: padX + (i / (spendData.length - 1)) * usableW,
+    y: padY + usableH - ((val / maxSpend) * usableH)
+  }))
+
+  const linePath = points.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(" ")
+  const areaPath = [
+    `M ${points[0].x} ${chartH - padY}`,
+    ...points.map(p => `L ${p.x} ${p.y}`),
+    `L ${points[points.length - 1].x} ${chartH - padY}`,
+    "Z"
+  ].join(" ")
+
+  // Recent activities
+  const recentActivities: { icon: React.ReactNode; text: string; time: string; color: string }[] = []
+
+  orders.slice(0, 2).forEach(o => {
+    if (o.status === "Processing") {
+      recentActivities.push({
+        icon: <Package className="h-4 w-4" />,
+        text: `Your order ${o.id} was successfully created and is in processing.`,
+        time: o.date,
+        color: "text-blue-500 bg-blue-50 dark:bg-blue-950/30"
+      })
+    } else if (o.status === "Shipped") {
+      recentActivities.push({
+        icon: <Truck className="h-4 w-4" />,
+        text: `Jacket shipment ${o.id} has left the warehouse (TRK-${o.trackingId || "987654321"}).`,
+        time: o.date,
+        color: "text-amber-500 bg-amber-50 dark:bg-amber-950/30"
+      })
+    } else if (o.status === "Delivered") {
+      recentActivities.push({
+        icon: <CheckCircle2 className="h-4 w-4" />,
+        text: `Order ${o.id} has been delivered successfully.`,
+        time: o.date,
+        color: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+      })
+    }
+  })
+
+  if (recentActivities.length === 0) {
+    recentActivities.push(
+      {
+        icon: <Package className="h-4 w-4" />,
+        text: "Your order #ORD-67898 was successfully created and is in processing.",
+        time: "Yesterday",
+        color: "text-blue-500 bg-blue-50 dark:bg-blue-950/30"
+      },
+      {
+        icon: <Truck className="h-4 w-4" />,
+        text: "Jacket shipment ORD-12345 has left the warehouse (TRK-987654321).",
+        time: "2 days ago",
+        color: "text-amber-500 bg-amber-50 dark:bg-amber-950/30"
+      }
+    )
+  }
+
+  recentActivities.push(
+    {
+      icon: <Star className="h-4 w-4" />,
+      text: "VIP Tier upgrade! You were promoted to Gold Tier level.",
+      time: "July 2, 2026",
+      color: "text-yellow-500 bg-yellow-50 dark:bg-yellow-950/30"
+    },
+    {
+      icon: <Info className="h-4 w-4" />,
+      text: "Your address details were synchronized with your profile.",
+      time: "July 1, 2026",
+      color: "text-zinc-500 bg-zinc-100 dark:bg-zinc-800"
+    }
   )
 
-  const activeShipments = orders.filter(
-    o => o.status === "Processing" || o.status === "Shipped"
-  ).length
-
-  // Stats Card data
-  const stats = [
-    { 
-      label: "Purchase Volume", 
-      val: `$${totalSpending.toFixed(2)}`, 
-      trend: "+14.8% vs last month", 
-      icon: ShoppingBag, 
-      color: "text-[#df4a4a]" 
+  const statCards = [
+    {
+      label: "Purchase Volume",
+      value: `$${purchaseVolume.toFixed(2)}`,
+      sub: "↑ +44.8% vs last month",
+      subColor: "text-emerald-500",
+      icon: <ShoppingBag className="h-5 w-5" />,
+      iconBg: "bg-rose-100 dark:bg-rose-950/40 text-rose-500",
+      accent: "border-l-4 border-rose-400"
     },
-    { 
-      label: "Pending Shipments", 
-      val: activeShipments.toString(), 
-      trend: activeShipments > 0 ? `${activeShipments} in transit` : "No pending items", 
-      icon: Clock, 
-      color: "text-blue-500" 
+    {
+      label: "Pending Shipments",
+      value: `${pendingShipments}`,
+      sub: `↑ ${pendingShipments} in transit`,
+      subColor: "text-blue-500",
+      icon: <Truck className="h-5 w-5" />,
+      iconBg: "bg-blue-100 dark:bg-blue-950/40 text-blue-500",
+      accent: "border-l-4 border-blue-400"
     },
-    { 
-      label: "Wishlist Items", 
-      val: wishlistCount.toString(), 
-      trend: "Syncs with header", 
-      icon: Heart, 
-      color: "text-red-500" 
+    {
+      label: "Wishlist Items",
+      value: `${wishlistCount}`,
+      sub: "Syncs with header",
+      subColor: "text-zinc-400",
+      icon: <Heart className="h-5 w-5" />,
+      iconBg: "bg-pink-100 dark:bg-pink-950/40 text-pink-500",
+      accent: "border-l-4 border-pink-400"
     },
-    { 
-      label: "Open Help Tickets", 
-      val: ticketsCount.toString(), 
-      trend: "AI responder live", 
-      icon: LifeBuoy, 
-      color: "text-green-500" 
+    {
+      label: "Open Help Tickets",
+      value: `${openTickets}`,
+      sub: "All responsed live",
+      subColor: "text-zinc-400",
+      icon: <HelpCircle className="h-5 w-5" />,
+      iconBg: "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-500",
+      accent: "border-l-4 border-emerald-400"
     }
   ]
 
-  // Chart values
-  const chartPoints = [
-    { x: 60, y: 140, val: "$40", date: "Jan" },
-    { x: 160, y: 110, val: "$90", date: "Feb" },
-    { x: 260, y: 125, val: "$60", date: "Mar" },
-    { x: 360, y: 80, val: "$120", date: "Apr" },
-    { x: 460, y: 30, val: "$190", date: "May" },
-    { x: 560, y: 65, val: `$${totalSpending > 10 ? Math.round(totalSpending) : 143}`, date: "Jun" }
-  ]
-
   return (
-    <div className="space-y-8 animate-fadeInFast">
-      {/* Header banner card */}
-      <div className="bg-gray-100 border border-zinc-850 p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 text-white relative overflow-hidden">
-        <div className="absolute right-0 bottom-0 top-0 opacity-10 flex items-center pointer-events-none">
-          <Trophy className="h-64 w-64 translate-x-20 rotate-12 text-white" />
-        </div>
-        
-        <div className="space-y-2 z-10">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4.5 w-4.5 text-black" />
-            <span className="text-sm font-semibold text-black uppercase tracking-widest">
-              {new Date().toLocaleDateString("en-US", { weekday: 'long', month: 'short', day: 'numeric' })}
-            </span>
+    <div className="space-y-6 animate-fadeInFast">
+
+      {/* ── Welcome Banner ── */}
+      <div className="relative bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 rounded-2xl px-8 py-6 overflow-hidden shadow-[0_1px_4px_rgba(0,0,0,0.04)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+        <div className="z-10">
+          <div className="flex items-center gap-2 text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">
+            <Calendar className="h-3.5 w-3.5" />
+            <span>{dateStr}</span>
           </div>
-          <h1 className="text-xl sm:text-3xl font-normal tracking-tight font-serif text-black">
-            Welcome back, <span className="font-bold text-[#df4a4a]">{user.name}</span>
-          </h1>
-          <p className="text-sm text-black max-w-lg font-light leading-relaxed">
-            You are currently logged into your VIP account. Benefit from exclusive members-only discounts, free returns, and 24/7 priority messaging desk.
+          <h2 className="text-2xl md:text-3xl font-black text-zinc-850 dark:text-zinc-100 tracking-tight leading-tight">
+            Welcome back, <span className="text-[#e8534a]">{user.name}</span>
+          </h2>
+          <p className="text-[12px] text-zinc-450 dark:text-zinc-505 mt-2 max-w-md leading-relaxed font-medium">
+            You are currently logged into your VIP account. Benefit from exclusive members‑only discounts, free returns, and 24/7 priority messaging desk.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 z-10 bg-yellow-700/50  p-3 sm:p-4 shrink-0 shadow-xl rounded-[10px]">
-          <div className="h-10 w-10 bg-[#df4a4a] flex items-center justify-center text-white">
-            <Trophy className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-[12px] font-bold text-black uppercase tracking-widest">Loyalty Level</div>
-            <div className="text-sm font-black tracking-wide text-white uppercase">{user.tier} Tier</div>
-            <div className="text-[12px] text-black font-semibold">{user.points} Reward Points</div>
+        {/* Loyalty Tier Badge */}
+        <div className="shrink-0 z-10">
+          <div className="bg-gradient-to-br from-[#c8a96e] to-[#9c7a3a] rounded-xl px-5 py-4 text-white shadow-lg shadow-amber-500/20 flex flex-col items-center min-w-[140px]">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Star className="h-4 w-4 fill-white/80 text-white/80" />
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-90">Loyalty Level</span>
+            </div>
+            <span className="text-lg font-black uppercase tracking-wider">{user.tier} Tier</span>
+            <span className="text-[10px] font-bold opacity-80 mt-0.5">{user.points.toLocaleString()} Reward Points</span>
           </div>
         </div>
+
+        <div className="absolute -right-16 -top-16 w-64 h-64 bg-gradient-to-br from-rose-100 to-amber-50 dark:from-rose-950/20 dark:to-amber-950/10 rounded-full opacity-60 blur-3xl pointer-events-none" />
       </div>
 
-      {/* Quick Metrics Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((m, idx) => {
-          const Icon = m.icon
-          return (
-            <div key={idx} className="bg-white dark:bg-zinc-900 rounded-[10px] border border-zinc-150 dark:border-zinc-805 p-5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] flex flex-col justify-between">
-              <div className="flex justify-between items-start">
-                <span className="text-sm font-medium text-black dark:text-zinc-500 uppercase tracking-wider">{m.label}</span>
-                <Icon className={`h-4.5 w-4.5 ${m.color}`} />
+      {/* ── 4 Stat Cards ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+        {statCards.map((card, i) => (
+          <div
+            key={i}
+            className={`bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 rounded-xl p-5 flex items-start justify-between gap-4 shadow-[0_1px_4px_rgba(0,0,0,0.03)] hover:shadow-md transition-shadow ${card.accent}`}
+          >
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] font-black text-zinc-400 dark:text-zinc-505 uppercase tracking-widest mb-2">
+                {card.label}
               </div>
-              <div className="mt-4">
-                <div className="text-xl sm:text-3xl font-semibold font-sans tracking-tight text-zinc-955 dark:text-white font-serif">{m.val}</div>
-                <p className="text-[12px] text-zinc-500 dark:text-zinc-400 mt-1 font-semibold flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3 text-[#df4a4a]" />
-                  {m.trend}
-                </p>
+              <div className="text-3xl font-black text-zinc-850 dark:text-zinc-100 tracking-tight leading-none mb-2">
+                {card.value}
+              </div>
+              <div className={`text-[11px] font-semibold ${card.subColor}`}>
+                {card.sub}
               </div>
             </div>
-          )
-        })}
+            <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${card.iconBg}`}>
+              {card.icon}
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Spending Chart & Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* SVG Area Chart */}
-        <div className="bg-white rounded-[10px] dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-805 p-6 shadow-[0_1px_4px_rgba(0,0,0,0.02)] lg:col-span-2">
-          <div className="flex items-center justify-between mb-6">
+      {/* ── Bottom Row: Chart + Recent Activities ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+        {/* Spending Analytics Chart */}
+        <div className="lg:col-span-7 bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 rounded-2xl p-6 shadow-[0_1px_4px_rgba(0,0,0,0.03)]">
+          <div className="flex items-start justify-between mb-4">
             <div>
-              <h3 className="text-lg font-semibold font-sans uppercase tracking-wider text-black dark:text-white">Spending Analytics</h3>
-              <p className="text-[12px] text-black font-sans">Past 6 months purchase tracker (in USD)</p>
+              <h3 className="text-sm font-black text-zinc-850 dark:text-zinc-100 uppercase tracking-wide">Spending Analytics</h3>
+              <p className="text-[10px] text-zinc-400 dark:text-zinc-505 mt-0.5 font-medium">Past 6 months purchase history (in USD)</p>
             </div>
-            <span className="text-[8px] font-bold text-[#df4a4a] border border-[#df4a4a]/25 px-2 py-0.5 tracking-wider bg-[#df4a4a]/5">
-              AUTO-UPDATES
-            </span>
+            <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-2.5 py-1.5 rounded-lg text-zinc-500 dark:text-zinc-400 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-750 transition-colors select-none">
+              <TrendingUp className="h-3 w-3" />
+              View Report
+            </div>
           </div>
 
-          <div className="relative w-full h-56 mt-4">
-            <svg viewBox="0 0 600 200" className="w-full h-full">
+          <div className="relative w-full" style={{ height: "200px" }}>
+            <svg viewBox={`0 0 ${chartW} ${chartH + 30}`} className="w-full h-full" preserveAspectRatio="none">
+              {[0, 1, 2, 3].map(i => {
+                const y = padY + (i / 3) * usableH
+                return (
+                  <line key={i} x1={padX} y1={y} x2={chartW - padX} y2={y}
+                    stroke="currentColor" className="text-zinc-100 dark:text-zinc-800"
+                    strokeWidth="1" strokeDasharray="4 4" />
+                )
+              })}
+
               <defs>
-                <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#df4a4a" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#df4a4a" stopOpacity="0" />
+                <linearGradient id="areaGradOv" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#e8534a" stopOpacity="0.18" />
+                  <stop offset="100%" stopColor="#e8534a" stopOpacity="0" />
                 </linearGradient>
               </defs>
+              <path d={areaPath} fill="url(#areaGradOv)" />
+              <path d={linePath} fill="none" stroke="#e8534a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
 
-              <line x1="40" y1="20" x2="580" y2="20" stroke="currentColor" className="text-zinc-100 dark:text-zinc-800/40" strokeWidth="1" strokeDasharray="3" />
-              <line x1="40" y1="65" x2="580" y2="65" stroke="currentColor" className="text-zinc-100 dark:text-zinc-800/40" strokeWidth="1" strokeDasharray="3" />
-              <line x1="40" y1="110" x2="580" y2="110" stroke="currentColor" className="text-zinc-100 dark:text-zinc-800/40" strokeWidth="1" strokeDasharray="3" />
-              <line x1="40" y1="155" x2="580" y2="155" stroke="currentColor" className="text-zinc-100 dark:text-zinc-800/40" strokeWidth="1" strokeDasharray="3" />
-              
-              <line x1="40" y1="160" x2="580" y2="160" stroke="currentColor" className="text-zinc-300 dark:text-zinc-800" strokeWidth="1.5" />
-
-              <path
-                d={`M 60 160 L 60 140 Q 110 120 160 110 Q 210 115 260 125 Q 310 100 360 80 Q 410 50 460 30 Q 510 50 560 ${chartPoints[5].y} L 560 160 Z`}
-                fill="url(#areaGradient)"
-              />
-
-              <path
-                d={`M 60 140 Q 110 120 160 110 Q 210 115 260 125 Q 310 100 360 80 Q 410 50 460 30 Q 510 50 560 ${chartPoints[5].y}`}
-                fill="none"
-                stroke="#df4a4a"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-              />
-
-              {chartPoints.map((pt, i) => (
-                <g key={i} className="group/node cursor-pointer">
-                  <circle
-                    cx={pt.x}
-                    cy={pt.y}
-                    r="5.5"
-                    className="fill-white dark:fill-zinc-955 stroke-[#df4a4a]"
-                    strokeWidth="2.5"
-                  />
-                  <circle
-                    cx={pt.x}
-                    cy={pt.y}
-                    r="12"
-                    fill="transparent"
-                  />
-                  <g className="opacity-0 group-hover/node:opacity-100 transition-opacity duration-150 pointer-events-none">
-                    <rect
-                      x={pt.x - 30}
-                      y={pt.y - 34}
-                      width="60"
-                      height="22"
-                      rx="3"
-                      className="fill-zinc-900 dark:fill-white shadow-xl"
-                    />
-                    <text
-                      x={pt.x}
-                      y={pt.y - 20}
-                      textAnchor="middle"
-                      className="fill-white dark:fill-zinc-900 text-[10px] font-bold"
-                    >
-                      {pt.val}
-                    </text>
-                  </g>
-                </g>
+              {points.map((p, i) => (
+                <circle key={i} cx={p.x} cy={p.y} r="4.5" fill="white" stroke="#e8534a" strokeWidth="2" className="dark:fill-zinc-900" />
               ))}
 
-              <text x="60" y="180" textAnchor="middle" className="fill-zinc-400 text-[9px] font-bold">JAN</text>
-              <text x="160" y="180" textAnchor="middle" className="fill-zinc-400 text-[9px] font-bold">FEB</text>
-              <text x="260" y="180" textAnchor="middle" className="fill-zinc-400 text-[9px] font-bold">MAR</text>
-              <text x="360" y="180" textAnchor="middle" className="fill-zinc-400 text-[9px] font-bold">APR</text>
-              <text x="460" y="180" textAnchor="middle" className="fill-zinc-400 text-[9px] font-bold">MAY</text>
-              <text x="560" y="180" textAnchor="middle" className="fill-zinc-400 text-[9px] font-bold">JUN</text>
-
-              <text x="30" y="24" textAnchor="end" className="fill-zinc-400 text-[8px] font-bold">$200</text>
-              <text x="30" y="69" textAnchor="end" className="fill-zinc-400 text-[8px] font-bold">$150</text>
-              <text x="30" y="114" textAnchor="end" className="fill-zinc-400 text-[8px] font-bold">$100</text>
-              <text x="30" y="158" textAnchor="end" className="fill-zinc-400 text-[8px] font-bold">$0</text>
+              {months.map((m, i) => {
+                const x = padX + (i / (months.length - 1)) * usableW
+                return (
+                  <text key={i} x={x} y={chartH + 22} textAnchor="middle"
+                    fill="#a1a1aa"
+                    style={{ fontSize: "9px", fontWeight: 700, fontFamily: "sans-serif" }}>
+                    {m}
+                  </text>
+                )
+              })}
             </svg>
           </div>
         </div>
 
-        {/* Recent Activity Feed */}
-        <div className="bg-white rounded-[10px] dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-805 p-6 shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
-          <h3 className="text-lg font-semibold font-sans uppercase tracking-wider text-zinc-900 dark:text-white mb-5">
-            Recent Activities
-          </h3>
-          
+        {/* Recent Activities */}
+        <div className="lg:col-span-5 bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/80 rounded-2xl p-6 shadow-[0_1px_4px_rgba(0,0,0,0.03)]">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-sm font-black text-zinc-850 dark:text-zinc-100 uppercase tracking-wide">Recent Activities</h3>
+            <span className="text-[9px] font-black text-zinc-400 dark:text-zinc-505 uppercase tracking-widest">Live</span>
+          </div>
+
           <div className="space-y-4">
-            {[
-              { text: `Your order #ORD-67890 was successfully created and is in processing.`, time: "Yesterday", icon: Clock },
-              { text: `Jacket shipment ORD-12345 has left the warehouse (TRK-987654321).`, time: "2 days ago", icon: ShoppingBag },
-              { text: `VIP Tier upgrade! You were promoted to Gold Tier level.`, time: "July 2, 2026", icon: Trophy },
-              { text: `Your address details were synchronized with your profile.`, time: "July 1, 2026", icon: MapPin }
-            ].map((act, idx) => {
-              const Icon = act.icon
-              return (
-                <div key={idx} className="flex gap-3 text-xs leading-relaxed">
-                  <div className="h-7 w-7 rounded-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700/50 flex items-center justify-center shrink-0 mt-0.5">
-                    <Icon className="h-3.5 w-3.5 text-[#df4a4a]" />
-                  </div>
-                  <div className="space-y-0.5">
-                    <p className="text-black text-sm font-sans dark:text-zinc-300 font-normal">{act.text}</p>
-                    <span className="text-[12px] text-zinc-400 font-medium">{act.time}</span>
-                  </div>
+            {recentActivities.map((activity, i) => (
+              <div key={i} className="flex items-start gap-3.5">
+                <div className={`h-7 w-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${activity.color}`}>
+                  {activity.icon}
                 </div>
-              )
-            })}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] font-semibold text-zinc-700 dark:text-zinc-300 leading-snug">
+                    {activity.text}
+                  </p>
+                  <span className="text-[10px] text-zinc-400 dark:text-zinc-505 font-medium mt-0.5 block">
+                    {activity.time}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+
       </div>
+
     </div>
   )
 }

@@ -8,7 +8,8 @@ export const DEFAULT_USER: DashboardUser = {
   email: "demo@arzuma.com",
   phone: "+880 1712-345678",
   tier: "Gold",
-  points: 1250
+  points: 1250,
+  role: "customer"
 }
 
 export const INITIAL_ORDERS: Order[] = [
@@ -128,7 +129,8 @@ export function useDashboardState() {
             email: parsed.email || DEFAULT_USER.email,
             phone: parsed.phone || DEFAULT_USER.phone || "",
             tier: parsed.tier || DEFAULT_USER.tier,
-            points: parsed.points || DEFAULT_USER.points
+            points: parsed.points || DEFAULT_USER.points,
+            role: parsed.role || "customer"
           })
           setProfileName(parsed.name || DEFAULT_USER.name)
           setProfileEmail(parsed.email || DEFAULT_USER.email)

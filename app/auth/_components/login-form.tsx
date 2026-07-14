@@ -5,31 +5,61 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff } from "lucide-react"
 
+type UserRole = "customer" | "superAdmin" | "admin" | "manager" | "moderator";
+
+type StoredUser = {
+  name?: string
+  email: string
+  tier?: string
+  points?: number
+  role?: UserRole
+}
+
 export function LoginForm() {
   const router = useRouter()
   const [showPassword, setShowPassword] = React.useState(false)
   const [identifier, setIdentifier] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [rememberMe, setRememberMe] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+
+  const normalizeEmail = (value: string) => {
+    const trimmed = value.trim().toLowerCase()
+    return trimmed.includes("@") ? trimmed : `${trimmed}@arzuma.com`
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
-    // Save mock user session
+
+    const email = normalizeEmail(identifier)
     const username = identifier.split("@")[0]
-    const formattedName = username.charAt(0).toUpperCase() + username.slice(1)
+    const formattedName = username ? username.charAt(0).toUpperCase() + username.slice(1) : "Farhad Reja"
+
+    const savedUsers = JSON.parse(localStorage.getItem("arzuma_all_users") || "[]") as StoredUser[]
+    const matchedUser = savedUsers.find((u) => u.email?.toLowerCase() === email)
+
+    if (!matchedUser) {
+      setError("No registered account found. Please register first.")
+      return
+    }
+
     const mockUser = {
-      name: formattedName || "Farhad Reja",
-      email: identifier.includes("@") ? identifier : `${identifier}@arzuma.com`,
-      tier: "Gold",
-      points: 1250
+      name: matchedUser.name || formattedName,
+      email: matchedUser.email,
+      tier: matchedUser.tier || "Gold",
+      points: matchedUser.points ?? 1250,
+      role: matchedUser.role || "customer"
     }
     localStorage.setItem("arzuma_user", JSON.stringify(mockUser))
-    
-    // Dispatch storage event to notify header/other components
+
     window.dispatchEvent(new Event("storage"))
-    
-    router.push("/dashboard")
+
+    const adminRoles: UserRole[] = ["superAdmin", "admin", "manager", "moderator"]
+    if (adminRoles.includes(mockUser.role)) {
+      router.push("/dashboard")
+    } else {
+      router.push("/")
+    }
   }
 
   return (
@@ -56,7 +86,10 @@ export function LoginForm() {
             type={showPassword ? "text" : "password"}
             required
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value)
+              setError(null)
+            }}
             className="w-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-955 px-4 py-3 text-xs outline-none focus:border-zinc-850 dark:focus:border-zinc-200 transition rounded-none pr-10"
           />
           <button
@@ -67,6 +100,16 @@ export function LoginForm() {
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
+      </div>
+
+      {error && (
+        <div className="text-[11px] text-red-600 dark:text-red-400">
+          {error}
+        </div>
+      )}
+
+      <div className="text-[10px] text-zinc-550 dark:text-zinc-450 leading-relaxed">
+        Please login with the email address you used when registering. Role assignment is managed by the system.
       </div>
 
       <div className="flex items-center">

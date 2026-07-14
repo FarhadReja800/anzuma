@@ -1,48 +1,50 @@
 "use client"
 
 import * as React from "react"
-import { useSearchParams } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { LoginForm } from "./_components/login-form"
 import { RegisterForm } from "./_components/register-form"
 
 function AuthContent() {
+  const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
   const mode = searchParams.get("mode")
 
-  const [activeTab, setActiveTab] = React.useState<"login" | "register">("login")
-  const [prevMode, setPrevMode] = React.useState<string | null>(null)
+  const activeTab: "login" | "register" = mode === "register" ? "register" : "login"
 
-  if (mode !== prevMode) {
-    setPrevMode(mode)
-    setActiveTab(mode === "register" ? "register" : "login")
+  const handleTabChange = (nextTab: "login" | "register") => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("mode", nextTab)
+    router.replace(`${pathname}?${params.toString()}`)
   }
 
   return (
     <div className="flex-1 bg-white text-zinc-955 dark:bg-zinc-950 dark:text-zinc-50 font-sans py-16 px-4 flex items-center justify-center min-h-[calc(100vh-80px)]">
       
       {/* Auth Card Outer Container */}
-      <div className="w-full max-w-[500px] border border-zinc-200 dark:border-zinc-800 p-8 sm:p-12 bg-white dark:bg-zinc-900 shadow-sm rounded-none">
+      <div className="w-full max-w-125 border border-zinc-200 dark:border-zinc-800 p-8 sm:p-12 bg-white dark:bg-zinc-900 shadow-sm rounded-none">
         
         {/* Tabs Headers */}
         <div className="flex justify-center items-center gap-8 mb-12 border-b border-zinc-100 dark:border-zinc-800 pb-4">
           <button
             type="button"
-            onClick={() => setActiveTab("login")}
+            onClick={() => handleTabChange("login")}
             className={`text-sm tracking-wider uppercase transition-all duration-200 ${
               activeTab === "login"
-                ? "font-bold text-zinc-955 dark:text-white border-b-2 border-zinc-955 dark:border-white pb-4 -mb-[18px]"
-                : "font-semibold text-zinc-400 dark:text-zinc-600 hover:text-zinc-600 dark:hover:text-zinc-400 pb-4 -mb-[18px]"
+                ? "font-bold text-zinc-955 dark:text-white border-b-2 border-zinc-955 dark:border-white pb-4 -mb-4.5"
+                : "font-semibold text-zinc-400 dark:text-zinc-600 hover:text-zinc-600 dark:hover:text-zinc-400 pb-4 -mb-4.5"
             }`}
           >
             Login
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("register")}
+            onClick={() => handleTabChange("register")}
             className={`text-sm tracking-wider uppercase transition-all duration-200 ${
               activeTab === "register"
-                ? "font-bold text-zinc-955 dark:text-white border-b-2 border-zinc-955 dark:border-white pb-4 -mb-[18px]"
-                : "font-semibold text-zinc-400 dark:text-zinc-650 hover:text-zinc-600 dark:hover:text-zinc-400 pb-4 -mb-[18px]"
+                ? "font-bold text-zinc-955 dark:text-white border-b-2 border-zinc-955 dark:border-white pb-4 -mb-4.5"
+                : "font-semibold text-zinc-400 dark:text-zinc-650 hover:text-zinc-600 dark:hover:text-zinc-400 pb-4 -mb-4.5 "
             }`}
           >
             Register

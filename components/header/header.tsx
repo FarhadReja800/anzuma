@@ -56,6 +56,7 @@ export function Header() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
+
   const [wishlistCount, setWishlistCount] = React.useState(0)
   const [wishlistItems, setWishlistItems] = React.useState<Product[]>([])
   const [cartCount, setCartCount] = React.useState(0)
@@ -64,7 +65,7 @@ export function Header() {
   const [searchQuery, setSearchQuery] = React.useState("")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
   const [isFollowersOpen, setIsFollowersOpen] = React.useState(false)
-  const [user, setUser] = React.useState<{ name: string; email: string; tier: string } | null>(null)
+  const [user, setUser] = React.useState<{ name: string; email: string; tier: string; role?: string } | null>(null)
   const followersRef = React.useRef<HTMLDivElement>(null)
 
   // Close followers dropdown when clicking outside
@@ -119,15 +120,15 @@ export function Header() {
 
       // Sync User Session
       const storedUser = localStorage.getItem("arzuma_user")
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser))
-        } catch (e) {
+        if (storedUser) {
+          try {
+            setUser(JSON.parse(storedUser))
+          } catch (e) {
+            setUser(null)
+          }
+        } else {
           setUser(null)
         }
-      } else {
-        setUser(null)
-      }
     }
 
     syncStorage()
@@ -142,6 +143,10 @@ export function Header() {
       window.removeEventListener("storage", syncStorage)
     }
   }, [])
+
+  // Hide main navigation when an admin-type user is viewing the dashboard
+  const adminRoles = ["superAdmin", "admin", "manager", "moderator"]
+  const isAdminOnDashboard = user && user.role && adminRoles.includes(user.role) && pathname?.startsWith("/dashboard")
 
   const handleClearCart = () => {
     localStorage.removeItem("cart")
@@ -321,7 +326,7 @@ export function Header() {
           </Link>
         </div>
         {/* Center: Desktop Navigation Links (Responsive display block on lg screen) */}
-        <Navbar isActive={isActive} />
+        {!isAdminOnDashboard && <Navbar isActive={isActive} />}
 
         {/* Right Side: Account, Search, Wishlist, Cart & Price */}
         <div className="flex items-center gap-3 sm:gap-4 md:gap-5">

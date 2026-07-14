@@ -4,8 +4,9 @@ export interface DashboardUser {
   name: string
   email: string
   phone?: string
-  tier: "Bronze" | "Silver" | "Gold" | "Platinum"
+  tier: "Bronze" | "Silver" | "Gold" | "Platinum" | "Root" | "Manager" | "Staff" | "Moderator"
   points: number
+  role?: "customer" | "superAdmin" | "admin" | "manager" | "moderator"
 }
 
 export interface Address {

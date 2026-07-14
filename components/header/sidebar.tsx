@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { usePathname } from "next/navigation"
 import { Menu, User, Heart, ChevronDown } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -18,7 +19,7 @@ import { Product } from "@/lib/data"
 interface SidebarProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  user: { name: string; email: string; tier: string } | null
+  user: { name: string; email: string; tier: string; role?: string } | null
   wishlistCount: number
   wishlistItems: Product[]
   isActive: (href: string) => boolean
@@ -38,6 +39,9 @@ export function Sidebar({
   onAddToCart,
   onAddToWishlist,
 }: SidebarProps) {
+  const pathname = usePathname()
+  const adminRoles = ["superAdmin", "admin", "manager", "moderator"]
+  const isAdminOnDashboard = user && user.role && adminRoles.includes(user.role) && pathname?.startsWith("/dashboard")
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
@@ -66,82 +70,84 @@ export function Sidebar({
         
         {/* Mobile Drawer Menu Links */}
         <div className="flex-1 overflow-y-auto py-6 px-6 space-y-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-none]">
-          <div className="space-y-4">
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Categories</h3>
-            <nav className="flex flex-col gap-3">
-              <Link 
-                href="/" 
-                onClick={() => onOpenChange(false)}
-                className="group flex items-center justify-between text-base font-semibold text-zinc-950 hover:text-zinc-600 transition-colors dark:text-zinc-50 dark:hover:text-zinc-300"
-              >
-                Home
-                <ChevronDown className="h-4 w-4 -rotate-90 text-zinc-400 group-hover:text-zinc-600" />
-              </Link>
-              <Link 
-                href="/shop" 
-                onClick={() => onOpenChange(false)}
-                className="group flex items-center justify-between text-base font-semibold text-zinc-950 hover:text-zinc-600 transition-colors dark:text-zinc-50 dark:hover:text-zinc-300"
-              >
-                Shop
-                <ChevronDown className="h-4 w-4 -rotate-90 text-zinc-400 group-hover:text-zinc-600" />
-              </Link>
-              <Link 
-                href="/allProductCategories?category=women" 
-                onClick={() => onOpenChange(false)}
-                className={`flex items-center justify-between text-base font-medium transition-colors ${
-                  isActive("/allProductCategories?category=women")
-                    ? "text-zinc-950 dark:text-white font-bold border-l-2 border-zinc-950 dark:border-white pl-2"
-                    : "text-zinc-800 hover:text-zinc-600 dark:text-zinc-300 dark:hover:text-white"
-                }`}
-              >
-                Women
-              </Link>
-              <Link 
-                href="/allProductCategories?category=men" 
-                onClick={() => onOpenChange(false)}
-                className={`flex items-center justify-between text-base font-medium transition-colors ${
-                  isActive("/allProductCategories?category=men")
-                    ? "text-zinc-950 dark:text-white font-bold border-l-2 border-zinc-950 dark:border-white pl-2"
-                    : "text-zinc-800 hover:text-zinc-600 dark:text-zinc-300 dark:hover:text-white"
-                }`}
-              >
-                Men
-              </Link>
-              <Link 
-                href="/outerwear" 
-                onClick={() => onOpenChange(false)}
-                className={`flex items-center justify-between text-base font-medium transition-colors ${
-                  isActive("/outerwear")
-                    ? "text-zinc-950 dark:text-white font-bold border-l-2 border-zinc-950 dark:border-white pl-2"
-                    : "text-zinc-800 hover:text-zinc-600 dark:text-zinc-300 dark:hover:text-white"
-                }`}
-              >
-                Outerwear
-              </Link>
-              <Link 
-                href="/blog" 
-                onClick={() => onOpenChange(false)}
-                className={`flex items-center justify-between text-base font-medium transition-colors ${
-                  isActive("/blog")
-                    ? "text-zinc-950 dark:text-white font-bold border-l-2 border-zinc-950 dark:border-white pl-2"
-                    : "text-zinc-800 hover:text-zinc-600 dark:text-zinc-300 dark:hover:text-white"
-                }`}
-              >
-                Blog
-              </Link>
-              <Link 
-                href="/contact" 
-                onClick={() => onOpenChange(false)}
-                className={`flex items-center justify-between text-base font-medium transition-colors ${
-                  isActive("/contact")
-                    ? "text-zinc-950 dark:text-white font-bold border-l-2 border-zinc-950 dark:border-white pl-2"
-                    : "text-zinc-800 hover:text-zinc-600 dark:text-zinc-300 dark:hover:text-white"
-                }`}
-              >
-                Contact
-              </Link>
-            </nav>
-          </div>
+          {!isAdminOnDashboard && (
+            <div className="space-y-4">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Categories</h3>
+              <nav className="flex flex-col gap-3">
+                <Link 
+                  href="/" 
+                  onClick={() => onOpenChange(false)}
+                  className="group flex items-center justify-between text-base font-semibold text-zinc-950 hover:text-zinc-600 transition-colors dark:text-zinc-50 dark:hover:text-zinc-300"
+                >
+                  Home
+                  <ChevronDown className="h-4 w-4 -rotate-90 text-zinc-400 group-hover:text-zinc-600" />
+                </Link>
+                <Link 
+                  href="/shop" 
+                  onClick={() => onOpenChange(false)}
+                  className="group flex items-center justify-between text-base font-semibold text-zinc-950 hover:text-zinc-600 transition-colors dark:text-zinc-50 dark:hover:text-zinc-300"
+                >
+                  Shop
+                  <ChevronDown className="h-4 w-4 -rotate-90 text-zinc-400 group-hover:text-zinc-600" />
+                </Link>
+                <Link 
+                  href="/allProductCategories?category=women" 
+                  onClick={() => onOpenChange(false)}
+                  className={`flex items-center justify-between text-base font-medium transition-colors ${
+                    isActive("/allProductCategories?category=women")
+                      ? "text-zinc-950 dark:text-white font-bold border-l-2 border-zinc-950 dark:border-white pl-2"
+                      : "text-zinc-800 hover:text-zinc-600 dark:text-zinc-300 dark:hover:text-white"
+                  }`}
+                >
+                  Women
+                </Link>
+                <Link 
+                  href="/allProductCategories?category=men" 
+                  onClick={() => onOpenChange(false)}
+                  className={`flex items-center justify-between text-base font-medium transition-colors ${
+                    isActive("/allProductCategories?category=men")
+                      ? "text-zinc-950 dark:text-white font-bold border-l-2 border-zinc-950 dark:border-white pl-2"
+                      : "text-zinc-800 hover:text-zinc-600 dark:text-zinc-300 dark:hover:text-white"
+                  }`}
+                >
+                  Men
+                </Link>
+                <Link 
+                  href="/outerwear" 
+                  onClick={() => onOpenChange(false)}
+                  className={`flex items-center justify-between text-base font-medium transition-colors ${
+                    isActive("/outerwear")
+                      ? "text-zinc-950 dark:text-white font-bold border-l-2 border-zinc-950 dark:border-white pl-2"
+                      : "text-zinc-800 hover:text-zinc-600 dark:text-zinc-300 dark:hover:text-white"
+                  }`}
+                >
+                  Outerwear
+                </Link>
+                <Link 
+                  href="/blog" 
+                  onClick={() => onOpenChange(false)}
+                  className={`flex items-center justify-between text-base font-medium transition-colors ${
+                    isActive("/blog")
+                      ? "text-zinc-950 dark:text-white font-bold border-l-2 border-zinc-950 dark:border-white pl-2"
+                      : "text-zinc-800 hover:text-zinc-600 dark:text-zinc-300 dark:hover:text-white"
+                  }`}
+                >
+                  Blog
+                </Link>
+                <Link 
+                  href="/contact" 
+                  onClick={() => onOpenChange(false)}
+                  className={`flex items-center justify-between text-base font-medium transition-colors ${
+                    isActive("/contact")
+                      ? "text-zinc-950 dark:text-white font-bold border-l-2 border-zinc-950 dark:border-white pl-2"
+                      : "text-zinc-800 hover:text-zinc-600 dark:text-zinc-300 dark:hover:text-white"
+                  }`}
+                >
+                  Contact
+                </Link>
+              </nav>
+            </div>
+          )}
 
           <div className="pt-6 space-y-4">
             <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Account & Wishlist</h3>

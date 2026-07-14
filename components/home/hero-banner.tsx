@@ -26,8 +26,8 @@ interface HeroBannerProps {
 
 export function HeroBanner({ 
   slides = heroSlides,
-  arrowWidthClass = "w-12",
-  arrowHeightClass = "h-12",
+  arrowWidthClass = "w-10 sm:w-12",
+  arrowHeightClass = "h-10 sm:h-12",
   arrowRadiusClass = "rounded-full",
   arrowBorderClass = "border border-zinc-200/50 dark:border-zinc-800/50",
   arrowBgClass = "bg-white/85 hover:bg-white dark:bg-black/70 dark:hover:bg-black"
@@ -36,19 +36,19 @@ export function HeroBanner({
 
   return (
     <section className="relative w-full">
-      <Carousel autoplay={true} className="group relative w-full bg-[#E5E5E3] dark:bg-zinc-950">
+      <Carousel autoplay={true} className="group relative w-full bg-[#E5E5E3] dark:bg-zinc-950" style={{ height: 'auto' }}>
         <CarouselContent>
           {slides.map((slide) => (
             <CarouselItem 
               key={slide.id} 
-              className={`relative flex flex-col md:flex-row items-center min-h-120 md:h-150 px-6 sm:px-12 lg:px-20 overflow-hidden ${slide.bgColorClass}`}
+              className={`relative flex flex-col md:flex-row items-center h-screen md:h-150 px-6 sm:px-12 lg:px-20 overflow-hidden ${slide.bgColorClass}`}
             >
               {/* Left Content */}
-              <div className="w-full md:w-[50%] space-y-6 text-left z-10 py-12 md:py-0 md:pr-4 pl-0 md:pl-10">
+              <div className="w-full md:w-[50%] space-y-6 text-left z-10 py-4 md:py-0 md:pr-4 pl-0 md:pl-10">
                 <span className="text-base font-medium uppercase tracking-[0.25em] text-zinc-500 dark:text-zinc-400">
                   {slide.subtitle}
                 </span>
-                <h2 className="text-4xl sm:text-5xl lg:text-[56px] xl:text-[62px] font-medium tracking-tight text-zinc-900 dark:text-zinc-50 leading-[1.1] md:leading-[1.05]">
+                <h2 className="text-3xl sm:text-4xl lg:text-[56px] xl:text-[62px] font-medium tracking-tight text-zinc-900 dark:text-zinc-50 leading-[1.1] md:leading-[1.05]">
                   {slide.titleLight} <br />
                   {slide.titleBold}
                 </h2>
@@ -69,7 +69,7 @@ export function HeroBanner({
               </div>
 
               {/* Right Side Visuals (Full bleed/seamless design to match user screenshot) */}
-              <div className="w-full md:w-[50%] h-80 md:h-full relative self-stretch flex items-end justify-end md:absolute md:right-0 md:bottom-0 md:top-0">
+              <div className="w-full md:w-[50%] h-full relative self-stretch flex items-end justify-end md:absolute md:right-0 md:bottom-0 md:top-0">
                 {slide.imageSrc ? (
                   <div className="relative w-full h-full">
                     <Image 
@@ -77,7 +77,7 @@ export function HeroBanner({
                       alt={slide.imageAlt || ""} 
                       fill
                       priority
-                      className="object-contain md:object-cover object-bottom md:object-bottom-right transition-transform duration-700"
+                      className="object-contain w-full h-full object-center transition-transform duration-700"
                     />
                   </div>
                 ) : (

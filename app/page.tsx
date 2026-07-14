@@ -30,7 +30,7 @@ export default function Home() {
       <BestSellerCarousel />
 
       {/* Background Video Section */}
-      <VideoBanner />
+      <VideoBanner videos={["/video/zara1 (1).mp4", "/video/zara1 (2).mp4", "/video/zara1 (3).mp4", "/video/zara1 (4).mp4"]} />
 
       {/* Best Sweatshirts Card Section */}
       <BestSweatshirtsCard />

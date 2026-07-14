@@ -17,12 +17,34 @@ export function RegisterForm() {
     
     // Save new mock user session
     const formattedName = username.charAt(0).toUpperCase() + username.slice(1)
+    const normalizedEmail = email.trim().toLowerCase()
     const mockUser = {
       name: formattedName || "Farhad Reja",
-      email: email,
+      email: normalizedEmail,
       tier: "Bronze", // Newly registered start at Bronze
-      points: 100 // Starting gift points
+      points: 100, // Starting gift points
+      role: "customer"
     }
+
+    const allUsers = JSON.parse(localStorage.getItem("arzuma_all_users") || "[]")
+    const existingIndex = allUsers.findIndex((u: any) => u.email?.toLowerCase() === normalizedEmail)
+    const joinedDate = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+
+    const userEntry = {
+      id: existingIndex > -1 ? allUsers[existingIndex].id : `USR-${Math.floor(100 + Math.random() * 900)}`,
+      name: formattedName || "Farhad Reja",
+      email: normalizedEmail,
+      role: existingIndex > -1 ? allUsers[existingIndex].role || "customer" : "customer",
+      status: existingIndex > -1 ? allUsers[existingIndex].status || "Active" : "Active",
+      joined: existingIndex > -1 ? allUsers[existingIndex].joined || joinedDate : joinedDate
+    }
+
+    if (existingIndex > -1) {
+      allUsers[existingIndex] = userEntry
+    } else {
+      allUsers.push(userEntry)
+    }
+    localStorage.setItem("arzuma_all_users", JSON.stringify(allUsers))
     localStorage.setItem("arzuma_user", JSON.stringify(mockUser))
     
     // Dispatch storage event to notify header/other components
