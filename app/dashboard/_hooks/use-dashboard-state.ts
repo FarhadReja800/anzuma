@@ -225,6 +225,7 @@ export function useDashboardState() {
   // Handle Logout
   const handleLogout = () => {
     localStorage.removeItem("arzuma_user")
+    localStorage.removeItem("arzuma_token")
     triggerToast("Logged out successfully!")
     setTimeout(() => {
       router.push("/auth?mode=login")

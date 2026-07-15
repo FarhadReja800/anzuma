@@ -202,6 +202,23 @@ export function Header() {
     }
   }
 
+  const isSuperAdminRoute = pathname === "/super-admin" || pathname?.startsWith("/super-admin/")
+  
+  const isStaffDashboardRoute = pathname ? [
+    "/dashboard/admin",
+    "/dashboard/manager",
+    "/dashboard/moderator",
+    "/dashboard/superadmin"
+  ].some(route => pathname === route || pathname.startsWith(route + "/")) : false
+
+  const isStaffUserOnDashboard = user && user.role && adminRoles.includes(user.role) && pathname?.startsWith("/dashboard")
+
+  const shouldHideHeader = isSuperAdminRoute || isStaffDashboardRoute || isStaffUserOnDashboard
+
+  if (shouldHideHeader) {
+    return null
+  }
+
   return (
     <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md transition-all duration-300 dark:border-zinc-800 dark:bg-black/95">
       {/* Top Bar - White bar with followers, shipping info, and order tracking */}

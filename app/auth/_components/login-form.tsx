@@ -5,60 +5,74 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff } from "lucide-react"
 
-type UserRole = "customer" | "superAdmin" | "admin" | "manager" | "moderator";
-
-type StoredUser = {
-  name?: string
-  email: string
-  tier?: string
-  points?: number
-  role?: UserRole
-}
+import { loginUser } from "@/store/api/user"
+import { AuthAPIResponse, UserRole } from "@/data/user.auth"
+import { useToast } from "@/components/ui/toast"
 
 export function LoginForm() {
   const router = useRouter()
+  const toast = useToast()
   const [showPassword, setShowPassword] = React.useState(false)
   const [identifier, setIdentifier] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [rememberMe, setRememberMe] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [loading, setLoading] = React.useState(false)
 
-  const normalizeEmail = (value: string) => {
+  const normalizeEmail = (value: string): string => {
     const trimmed = value.trim().toLowerCase()
     return trimmed.includes("@") ? trimmed : `${trimmed}@arzuma.com`
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const email = normalizeEmail(identifier)
-    const username = identifier.split("@")[0]
-    const formattedName = username ? username.charAt(0).toUpperCase() + username.slice(1) : "Farhad Reja"
 
-    const savedUsers = JSON.parse(localStorage.getItem("arzuma_all_users") || "[]") as StoredUser[]
-    const matchedUser = savedUsers.find((u) => u.email?.toLowerCase() === email)
+    try {
+      setLoading(true)
+      setError(null)
 
-    if (!matchedUser) {
-      setError("No registered account found. Please register first.")
-      return
-    }
+      const response = await loginUser({ email, password })
 
-    const mockUser = {
-      name: matchedUser.name || formattedName,
-      email: matchedUser.email,
-      tier: matchedUser.tier || "Gold",
-      points: matchedUser.points ?? 1250,
-      role: matchedUser.role || "customer"
-    }
-    localStorage.setItem("arzuma_user", JSON.stringify(mockUser))
+      // Extract token and save to localStorage
+      const token = response.token || response.accessToken || response.data?.token || ""
+      if (token) {
+        localStorage.setItem("arzuma_token", token)
+      }
 
-    window.dispatchEvent(new Event("storage"))
+      // Extract user info
+      const apiUser = response.user || response.data?.user || response
 
-    const adminRoles: UserRole[] = ["superAdmin", "admin", "manager", "moderator"]
-    if (adminRoles.includes(mockUser.role)) {
-      router.push("/dashboard")
-    } else {
-      router.push("/")
+      let userRole: string = apiUser.role || "customer"
+      if (userRole === "super-admin") {
+        userRole = "superAdmin"
+      }
+
+      const loggedInUser = {
+        name: apiUser.name || apiUser.username || identifier.split("@")[0],
+        email: apiUser.email || email,
+        tier: apiUser.tier || "Gold",
+        points: apiUser.points ?? 1250,
+        role: userRole as UserRole
+      }
+      localStorage.setItem("arzuma_user", JSON.stringify(loggedInUser))
+
+      window.dispatchEvent(new Event("storage"))
+
+      toast.success("Successfully logged in! Redirecting...")
+
+      if (loggedInUser.role === "superAdmin") {
+        router.push("/super-admin")
+      } else {
+        router.push("/dashboard")
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Invalid email or password. Please try again."
+      setError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -73,7 +87,7 @@ export function LoginForm() {
           required
           value={identifier}
           onChange={(e) => setIdentifier(e.target.value)}
-          className="w-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-3 text-xs outline-none focus:border-zinc-850 dark:focus:border-zinc-200 transition rounded-none"
+          className="w-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-955 px-4 py-3 text-xs outline-none focus:border-zinc-850 dark:focus:border-zinc-200 transition rounded-none"
         />
       </div>
 
@@ -103,7 +117,7 @@ export function LoginForm() {
       </div>
 
       {error && (
-        <div className="text-[11px] text-red-600 dark:text-red-400">
+        <div className="text-[11px] text-red-655 dark:text-red-400">
           {error}
         </div>
       )}
@@ -126,9 +140,10 @@ export function LoginForm() {
 
       <button
         type="submit"
-        className="w-full bg-[#df4a4a] hover:bg-[#c83c3c] text-white py-3.5 text-xs font-bold uppercase tracking-wider transition duration-200 rounded-none"
+        disabled={loading}
+        className="w-full bg-[#df4a4a] hover:bg-[#c83c3c] disabled:bg-zinc-400 text-white py-3.5 text-xs font-bold uppercase tracking-wider transition duration-200 rounded-none cursor-pointer disabled:cursor-not-allowed"
       >
-        Log in
+        {loading ? "Logging in..." : "Log in"}
       </button>
 
       <div className="text-left mt-2">

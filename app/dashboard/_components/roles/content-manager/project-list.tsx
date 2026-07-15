@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import NextImage from "next/image"
 import { Edit2, Trash2, Lock } from "lucide-react"
 import { Project } from "./types"
 
@@ -34,7 +35,14 @@ export function ProjectList({ projects, canEdit, canDelete, onEdit, onDelete }: 
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 bg-zinc-100 dark:bg-zinc-800 rounded-lg overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center">
                     {p.images && p.images[0] ? (
-                      <img src={p.images[0]} alt={p.name} className="h-full w-full object-cover" />
+                      <NextImage 
+                        src={p.images[0]} 
+                        alt={p.name} 
+                        width={40}
+                        height={40}
+                        className="h-full w-full object-cover" 
+                        unoptimized
+                      />
                     ) : (
                       <span className="text-[10px] text-zinc-400 font-bold">No Img</span>
                     )}

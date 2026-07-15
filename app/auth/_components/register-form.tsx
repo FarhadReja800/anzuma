@@ -5,52 +5,97 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff } from "lucide-react"
 
+import { registerUser } from "@/store/api/user"
+import { AuthAPIResponse, UserEntry, UserRole } from "@/data/user.auth"
+import { useToast } from "@/components/ui/toast"
+
 export function RegisterForm() {
   const router = useRouter()
+  const toast = useToast()
   const [showPassword, setShowPassword] = React.useState(false)
   const [username, setUsername] = React.useState("")
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
+  const [error, setError] = React.useState<string | null>(null)
+  const [loading, setLoading] = React.useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Save new mock user session
     const formattedName = username.charAt(0).toUpperCase() + username.slice(1)
     const normalizedEmail = email.trim().toLowerCase()
-    const mockUser = {
-      name: formattedName || "Farhad Reja",
-      email: normalizedEmail,
-      tier: "Bronze", // Newly registered start at Bronze
-      points: 100, // Starting gift points
-      role: "customer"
-    }
 
-    const allUsers = JSON.parse(localStorage.getItem("arzuma_all_users") || "[]")
-    const existingIndex = allUsers.findIndex((u: any) => u.email?.toLowerCase() === normalizedEmail)
-    const joinedDate = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    try {
+      setLoading(true)
+      setError(null)
 
-    const userEntry = {
-      id: existingIndex > -1 ? allUsers[existingIndex].id : `USR-${Math.floor(100 + Math.random() * 900)}`,
-      name: formattedName || "Farhad Reja",
-      email: normalizedEmail,
-      role: existingIndex > -1 ? allUsers[existingIndex].role || "customer" : "customer",
-      status: existingIndex > -1 ? allUsers[existingIndex].status || "Active" : "Active",
-      joined: existingIndex > -1 ? allUsers[existingIndex].joined || joinedDate : joinedDate
-    }
+      const response = await registerUser({
+        name: formattedName,
+        email: normalizedEmail,
+        password: password,
+        role: "user", // Default role tested in postman user register request
+      })
 
-    if (existingIndex > -1) {
-      allUsers[existingIndex] = userEntry
-    } else {
-      allUsers.push(userEntry)
+      // If registration returns token/session info, save it
+      const token = response.token || response.accessToken || response.data?.token || ""
+      if (token) {
+        localStorage.setItem("arzuma_token", token)
+      }
+
+      // Save user session
+      const apiUser = response.user || response.data?.user || response
+      let userRole: string = apiUser.role === "user" ? "customer" : (apiUser.role || "customer")
+      if (userRole === "super-admin") {
+        userRole = "superAdmin"
+      }
+
+      const mockUser = {
+        name: apiUser.name || formattedName,
+        email: apiUser.email || normalizedEmail,
+        tier: "Bronze", 
+        points: 100, 
+        role: userRole as UserRole
+      }
+
+      const allUsers = JSON.parse(localStorage.getItem("arzuma_all_users") || "[]") as UserEntry[]
+      const existingIndex = allUsers.findIndex((u: UserEntry) => u.email?.toLowerCase() === normalizedEmail)
+      const joinedDate = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+
+      const userEntry: UserEntry = {
+        id: existingIndex > -1 ? allUsers[existingIndex].id : `USR-${Math.floor(100 + Math.random() * 900)}`,
+        name: apiUser.name || formattedName,
+        email: normalizedEmail,
+        role: userRole as UserRole,
+        status: "Active",
+        joined: existingIndex > -1 ? allUsers[existingIndex].joined || joinedDate : joinedDate
+      }
+
+      if (existingIndex > -1) {
+        allUsers[existingIndex] = userEntry
+      } else {
+        allUsers.push(userEntry)
+      }
+
+      localStorage.setItem("arzuma_all_users", JSON.stringify(allUsers))
+      localStorage.setItem("arzuma_user", JSON.stringify(mockUser))
+      
+      // Dispatch storage event to notify header/other components
+      window.dispatchEvent(new Event("storage"))
+      
+      toast.success("Successfully registered account! Welcome!")
+
+      if (mockUser.role === "superAdmin") {
+        router.push("/super-admin")
+      } else {
+        router.push("/dashboard")
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to register. Please try again."
+      setError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      setLoading(false)
     }
-    localStorage.setItem("arzuma_all_users", JSON.stringify(allUsers))
-    localStorage.setItem("arzuma_user", JSON.stringify(mockUser))
-    
-    // Dispatch storage event to notify header/other components
-    window.dispatchEvent(new Event("storage"))
-    
-    router.push("/dashboard")
   }
 
   return (
@@ -111,11 +156,18 @@ export function RegisterForm() {
         .
       </p>
 
+      {error && (
+        <div className="text-[11px] text-red-650 dark:text-red-400">
+          {error}
+        </div>
+      )}
+
       <button
         type="submit"
-        className="w-full bg-[#df4a4a] hover:bg-[#c83c3c] text-white py-3.5 text-xs font-bold uppercase tracking-wider transition duration-200 rounded-none"
+        disabled={loading}
+        className="w-full bg-[#df4a4a] hover:bg-[#c83c3c] disabled:bg-zinc-400 text-white py-3.5 text-xs font-bold uppercase tracking-wider transition duration-200 rounded-none cursor-pointer disabled:cursor-not-allowed"
       >
-        Register
+        {loading ? "Registering..." : "Register"}
       </button>
     </form>
   )

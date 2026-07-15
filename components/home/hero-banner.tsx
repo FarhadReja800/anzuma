@@ -1,3 +1,6 @@
+"use client"
+
+import * as React from "react"
 import Link from "next/link"
 import NextImage from "next/image"
 import { ShoppingBag } from "lucide-react"
@@ -14,6 +17,7 @@ import {
   CarouselDots 
 } from "@/components/ui/carousel"
 import { heroSlides, Slide } from "@/lib/data"
+import { getBanners } from "@/store/api/banner"
 
 interface HeroBannerProps {
   slides?: Slide[]
@@ -34,11 +38,49 @@ export function HeroBanner({
 }: HeroBannerProps) {
   const arrowStyles = `${arrowWidthClass} ${arrowHeightClass} ${arrowRadiusClass} ${arrowBorderClass} ${arrowBgClass}`
 
+  const [fetchedSlides, setFetchedSlides] = React.useState<Slide[]>([])
+
+  React.useEffect(() => {
+    async function loadBanners() {
+      try {
+        const banners = await getBanners()
+        const activeBanners = banners.filter(b => b.isActive)
+        if (activeBanners.length > 0) {
+          const mapped: Slide[] = activeBanners.map((banner, index) => {
+            const title = banner.title || ""
+            const words = title.split(" ")
+            const titleLight = words[0] || ""
+            const titleBold = words.slice(1).join(" ")
+
+            return {
+              id: index + 1,
+              subtitle: "NEW ARRIVAL",
+              titleLight: titleLight,
+              titleBold: titleBold || title,
+              description: banner.description || "",
+              buttonText: "Shop Now",
+              buttonLink: "/shop",
+              bgColorClass: index % 2 === 0 ? "bg-[#eaeaea] dark:bg-zinc-900" : "bg-[#e6e9e4] dark:bg-zinc-850",
+              imageSrc: banner.imageUrl || "",
+              imageAlt: banner.title || "Banner Image"
+            }
+          })
+          setFetchedSlides(mapped)
+        }
+      } catch (err) {
+        console.error("Failed to load banners from API, keeping static slides fallback", err)
+      }
+    }
+    loadBanners()
+  }, [])
+
+  const displaySlides = fetchedSlides.length > 0 ? fetchedSlides : slides
+
   return (
     <section className="relative w-full">
       <Carousel autoplay={true} className="group relative w-full bg-[#E5E5E3] dark:bg-zinc-950" style={{ height: 'auto' }}>
         <CarouselContent>
-          {slides.map((slide) => (
+          {displaySlides.map((slide) => (
             <CarouselItem 
               key={slide.id} 
               className={`relative flex flex-col md:flex-row items-center h-screen md:h-150 px-6 sm:px-12 lg:px-20 overflow-hidden ${slide.bgColorClass}`}

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { ShieldCheck } from "lucide-react"
 
 import { DashboardShell } from "./dashboard-shell"
@@ -11,7 +12,6 @@ import { AddressesTab } from "./addresses-tab"
 import { RewardsTab } from "./rewards-tab"
 import { SupportTab } from "./support-tab"
 import { SettingsTab } from "./settings-tab"
-import { SuperAdminView } from "./roles/super-admin/index"
 import { AdminView } from "./roles/admin/index"
 import { ManagerView } from "./roles/manager/index"
 import { ModeratorView } from "./roles/moderator/index"
@@ -28,21 +28,12 @@ interface DashboardPageProps {
 
 export function DashboardPage({ roleOverride }: DashboardPageProps) {
   const state = useDashboardState()
+  const router = useRouter()
   const mounted = React.useSyncExternalStore(
     emptySubscribe,
     getSnapshot,
     getServerSnapshot
   )
-
-  if (!mounted) {
-    return (
-      <div className="flex-1 bg-[#fcfcfc] dark:bg-zinc-950 flex items-center justify-center min-h-[calc(100vh-80px)]">
-        <div className="text-xs font-bold uppercase tracking-widest text-zinc-400 animate-pulse">
-          Loading Security Session...
-        </div>
-      </div>
-    )
-  }
 
   const {
     user,
@@ -100,8 +91,33 @@ export function DashboardPage({ roleOverride }: DashboardPageProps) {
     role: roleOverride || user.role
   }
 
+  React.useEffect(() => {
+    if (mounted && currentUser && currentUser.role === "superAdmin") {
+      router.push("/super-admin")
+    }
+  }, [currentUser, router, mounted])
+
+  if (!mounted) {
+    return (
+      <div className="flex-1 bg-[#fcfcfc] dark:bg-zinc-950 flex items-center justify-center min-h-[calc(100vh-80px)]">
+        <div className="text-xs font-bold uppercase tracking-widest text-zinc-400 animate-pulse">
+          Loading Security Session...
+        </div>
+      </div>
+    )
+  }
+
   if (currentUser && currentUser.role === "superAdmin") {
-    return <SuperAdminView user={currentUser} handleLogout={handleLogout} />
+    return (
+      <div className="flex-1 bg-white dark:bg-zinc-950 flex flex-col items-center justify-center min-h-screen p-8 text-center">
+        <h2 className="text-xl font-bold tracking-tight text-zinc-800 dark:text-zinc-200">
+          Redirecting to Root Control Center...
+        </h2>
+        <p className="text-xs text-zinc-400 dark:text-zinc-505 mt-2">
+          Please wait while we route you to the isolated administration terminal.
+        </p>
+      </div>
+    )
   }
   if (currentUser && currentUser.role === "admin") {
     return <AdminView user={currentUser} handleLogout={handleLogout} />
@@ -112,6 +128,7 @@ export function DashboardPage({ roleOverride }: DashboardPageProps) {
   if (currentUser && currentUser.role === "moderator") {
     return <ModeratorView user={currentUser} handleLogout={handleLogout} />
   }
+
 
   return (
     <DashboardShell

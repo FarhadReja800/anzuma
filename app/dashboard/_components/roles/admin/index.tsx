@@ -17,6 +17,8 @@ import { UsersTab } from "../super-admin/users-tab"
 import { RbacMatrixView } from "../rbac-matrix-view"
 import { RolePermissions, getRbacPermissions, DEFAULT_RBAC_PERMISSIONS } from "../rbac-config"
 import { ContentTab } from "../content-tab"
+import { HomeBannerTab } from "../banner-tab"
+import { VideoTab } from "../video-tab"
 
 interface AdminViewProps {
   user: DashboardUser
@@ -47,7 +49,7 @@ const DEFAULT_COUPONS: Coupon[] = [
 ]
 
 export function AdminView({ user, handleLogout }: AdminViewProps) {
-  const [activeTab, setActiveTab] = React.useState<"overview" | "catalog" | "orders" | "coupons" | "rbac" | "content" | "users">("overview")
+  const [activeTab, setActiveTab] = React.useState<"overview" | "catalog" | "orders" | "coupons" | "rbac" | "content" | "users" | "home-banner" | "create-video">("overview")
   const [products, setProducts] = React.useState<Product[]>([])
   const [orders, setOrders] = React.useState<Order[]>([])
   const [coupons, setCoupons] = React.useState<Coupon[]>([])
@@ -361,6 +363,16 @@ export function AdminView({ user, handleLogout }: AdminViewProps) {
           handleDeleteCoupon={handleDeleteCoupon}
           permissions={activePermissions}
         />
+      )}
+
+      {/* HOME BANNER TAB */}
+      {activeTab === "home-banner" && (
+        <HomeBannerTab triggerToast={triggerToast} />
+      )}
+
+      {/* CREATE VIDEO TAB */}
+      {activeTab === "create-video" && (
+        <VideoTab triggerToast={triggerToast} />
       )}
 
       {/* RBAC MATRIX VIEW */}

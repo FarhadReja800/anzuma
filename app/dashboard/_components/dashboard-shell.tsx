@@ -26,7 +26,8 @@ import {
   Menu,
   Sun,
   Moon,
-  Headphones
+  Headphones,
+  Video
 } from "lucide-react"
 import NextImage from "next/image"
 import Link from "next/link"
@@ -160,6 +161,16 @@ export function DashboardShell({
       mainItems.push({ id: "coupons", label: "Coupon Manager", icon: Tag, badge: couponsCount })
     } else {
       mainItems.push({ id: "coupon-code", label: "Coupon Code", icon: Tag, disabled: true })
+    }
+
+    // Home Banner
+    if (role === "superAdmin" || role === "admin") {
+      mainItems.push({ id: "home-banner", label: "Home Banner", icon: Image })
+    }
+
+    // Video Create
+    if (role === "superAdmin" || role === "admin") {
+      mainItems.push({ id: "create-video", label: "Create Video", icon: Video })
     }
 
     // Categories / Catalog
