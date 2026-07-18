@@ -12,16 +12,16 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
   // If it's absolute (e.g. 'http://localhost:5000/api/...'), use it directly.
   const url = endpoint.startsWith("http") ? endpoint : `${BASE_URL}${endpoint}`;
 
-  const headers: HeadersInit = {
-    ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
-    ...options.headers,
-  };
+  const headers = new Headers(options.headers);
+  if (!(options.body instanceof FormData) && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
 
   // If in client context, automatically attach bearer authorization token
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("arzuma_token");
-    if (token && !(headers as any)["Authorization"]) {
-      (headers as any)["Authorization"] = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+    if (token && !headers.has("Authorization")) {
+      headers.set("Authorization", token.startsWith("Bearer ") ? token : `Bearer ${token}`);
     }
   }
 

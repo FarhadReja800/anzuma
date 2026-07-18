@@ -6,7 +6,7 @@ import { NextResponse } from "next/server"
  */
 export async function GET(request: Request) {
   try {
-    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api/v1"}/category/get-categories`
+    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL || "https://arzuma-backend.vercel.app/api/v1"}/category/get-categories`
 
     const response = await fetch(backendUrl, {
       method: "GET",

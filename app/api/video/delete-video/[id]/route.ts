@@ -10,7 +10,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api/v1"}/video/delete-video/${id}`;
+    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL || "https://arzuma-backend.vercel.app/api/v1"}/video/delete-video/${id}`;
 
     const response = await fetch(backendUrl, {
       method: "DELETE",
@@ -21,10 +21,11 @@ export async function DELETE(
 
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error proxying delete-video to backend:", error);
+    const errorMessage = error instanceof Error ? error.message : "Server error while communicating with backend.";
     return NextResponse.json(
-      { success: false, error: error.message || "Server error while communicating with backend." },
+      { success: false, error: errorMessage },
       { status: 500 }
     );
   }

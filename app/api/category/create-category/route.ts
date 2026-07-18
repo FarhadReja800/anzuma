@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api/v1"}/category/create-category`
+    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL || "https://arzuma-backend.vercel.app/api/v1"}/category/create-category`
 
     const response = await fetch(backendUrl, {
       method: "POST",

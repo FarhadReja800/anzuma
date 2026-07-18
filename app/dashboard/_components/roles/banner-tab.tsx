@@ -170,9 +170,9 @@ export function HomeBannerTab({ triggerToast }: BannerTabProps) {
         setBanners(prev => prev.map(b => (b.id === editingBannerId || b._id === editingBannerId) ? updatedBanner : b))
         triggerToast("Banner updated successfully on server!")
         handleCancelForm()
-      } catch (error: any) {
+      } catch (error) {
         console.error("Could not update banner on server:", error)
-        triggerToast(error.message || "Failed to update banner on server.")
+        triggerToast(error instanceof Error ? error.message : "Failed to update banner on server.")
       } finally {
         setIsSubmitting(false)
       }
@@ -183,9 +183,9 @@ export function HomeBannerTab({ triggerToast }: BannerTabProps) {
         setBanners(prev => [created, ...prev])
         triggerToast("Banner created successfully on server!")
         handleCancelForm()
-      } catch (error: any) {
+      } catch (error) {
         console.error("Could not create banner on server:", error)
-        triggerToast(error.message || "Failed to create banner on server.")
+        triggerToast(error instanceof Error ? error.message : "Failed to create banner on server.")
       } finally {
         setIsSubmitting(false)
       }
@@ -202,9 +202,9 @@ export function HomeBannerTab({ triggerToast }: BannerTabProps) {
       await updateBanner(id, { isActive: newStatus })
       setBanners(prev => prev.map(b => (b.id === id || b._id === id) ? { ...b, isActive: newStatus } : b))
       triggerToast(`Banner status toggled to ${newStatus ? "Active" : "Inactive"} on server!`)
-    } catch (error: any) {
+    } catch (error) {
       console.error("Could not update banner status on backend:", error)
-      triggerToast(error.message || "Failed to update banner status on server.")
+      triggerToast(error instanceof Error ? error.message : "Failed to update banner status on server.")
     }
   }
 
@@ -214,9 +214,9 @@ export function HomeBannerTab({ triggerToast }: BannerTabProps) {
       await deleteBanner(id)
       setBanners(prev => prev.filter(b => b.id !== id && b._id !== id))
       triggerToast("Banner removed from server successfully!")
-    } catch (error: any) {
+    } catch (error) {
       console.error("Could not delete banner on backend:", error)
-      triggerToast(error.message || "Failed to delete banner from server.")
+      triggerToast(error instanceof Error ? error.message : "Failed to delete banner from server.")
     }
   }
 
