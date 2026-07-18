@@ -1,15 +1,16 @@
 "use client"
 
 import * as React from "react"
-import { Project } from "./types"
+import { Project, TCategory } from "./types"
 
 interface ProjectFormProps {
   initialData?: Project | null
+  categoriesList?: TCategory[]
   onSubmit: (data: Partial<Project>) => void
   onCancel: () => void
 }
 
-export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProps) {
+export function ProjectForm({ initialData, categoriesList = [], onSubmit, onCancel }: ProjectFormProps) {
   const [name, setName] = React.useState(initialData?.name || "")
   const [slug, setSlug] = React.useState(initialData?.slug || "")
   const [sku, setSku] = React.useState(initialData?.sku || "")
@@ -19,16 +20,49 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
   const [description, setDescription] = React.useState(initialData?.description || "")
   const [shortDescription, setShortDescription] = React.useState(initialData?.shortDescription || "")
   const [images, setImages] = React.useState(initialData?.images?.join(", ") || "")
-  const [categories, setCategories] = React.useState(initialData?.categories?.join(", ") || "")
+  const [selectedCategories, setSelectedCategories] = React.useState<string[]>(
+    initialData?.categories || []
+  )
   const [tags, setTags] = React.useState(initialData?.tags?.join(", ") || "")
   const [sizes, setSizes] = React.useState(initialData?.sizes?.join(", ") || "")
   const [stockQuantity, setStockQuantity] = React.useState(initialData?.stockQuantity?.toString() || "50")
   const [inStock, setInStock] = React.useState(initialData?.inStock ?? true)
-  const [ratings, setRatings] = React.useState(initialData?.ratings?.toString() || "4.8")
-  const [reviewsCount, setReviewsCount] = React.useState(initialData?.reviewsCount?.toString() || "2")
+  const [ratings] = React.useState(initialData?.ratings?.toString() || "4.8")
+  const [reviewsCount] = React.useState(initialData?.reviewsCount?.toString() || "2")
   const [weight, setWeight] = React.useState(initialData?.additionalInformation?.weight || "250g")
   const [dimensions, setDimensions] = React.useState(initialData?.additionalInformation?.dimensions || "30 x 25 x 3 cm")
   const [isActive, setIsActive] = React.useState(initialData?.isActive ?? true)
+  const [uploadingImage, setUploadingImage] = React.useState(false)
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingImage(true)
+    const formData = new FormData()
+    formData.append("file", file)
+
+    try {
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData
+      })
+      const resData = await response.json()
+      if (response.ok && resData.success) {
+        setImages(prev => {
+          const trimmed = prev.trim()
+          return trimmed ? `${trimmed}, ${resData.url}` : resData.url
+        })
+      } else {
+        alert(resData.error || "Upload failed.")
+      }
+    } catch (error) {
+      console.error("Upload error:", error)
+      alert("Error uploading file.")
+    } finally {
+      setUploadingImage(false)
+    }
+  }
 
   // Colors state color formatting
   const getColorsInitial = () => {
@@ -71,7 +105,7 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
       description,
       shortDescription,
       images: images.split(",").map(s => s.trim()).filter(Boolean),
-      categories: categories.split(",").map(s => s.trim()).filter(Boolean),
+      categories: selectedCategories,
       tags: tags.split(",").map(s => s.trim()).filter(Boolean),
       colors: parseColorsString(colors),
       sizes: sizes.split(",").map(s => s.trim()).filter(Boolean),
@@ -162,18 +196,55 @@ export function ProjectForm({ initialData, onSubmit, onCancel }: ProjectFormProp
 
         <div className="flex flex-col gap-1.5 md:col-span-3">
           <span className="text-[10px] font-bold text-zinc-400 uppercase">Images list (comma separated URLs)</span>
-          <textarea 
-            placeholder="https://example.com/front.jpg, https://example.com/back.jpg..." value={images} onChange={(e) => setImages(e.target.value)}
-            className="bg-zinc-50 dark:bg-zinc-955 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-2 text-xs text-zinc-800 dark:text-zinc-200 outline-none focus:border-[#3eb075] h-14"
-          />
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+            <textarea 
+              placeholder="https://example.com/front.jpg, https://example.com/back.jpg..." value={images} onChange={(e) => setImages(e.target.value)}
+              className="bg-zinc-50 dark:bg-zinc-955 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-2 text-xs text-zinc-800 dark:text-zinc-200 outline-none focus:border-[#3eb075] h-14 flex-1"
+            />
+            <label className="shrink-0 flex flex-col justify-center items-center px-4 py-3 bg-zinc-50 dark:bg-zinc-955 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl text-center cursor-pointer select-none transition-colors h-14 min-w-[130px]">
+              <span className="text-[10px] font-bold text-zinc-500 uppercase">
+                {uploadingImage ? "Uploading..." : "Upload File"}
+              </span>
+              <input 
+                type="file" 
+                accept="image/*" 
+                disabled={uploadingImage}
+                onChange={handleImageUpload} 
+                className="hidden" 
+              />
+            </label>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] font-bold text-zinc-400 uppercase">Categories (comma separated IDs)</span>
-          <input 
-            type="text" placeholder="68748e89d9f9b3d9e4b1a001..." value={categories} onChange={(e) => setCategories(e.target.value)}
-            className="bg-zinc-50 dark:bg-zinc-955 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-2 text-xs text-zinc-800 dark:text-zinc-200 outline-none focus:border-[#3eb075]"
-          />
+        <div className="flex flex-col gap-1.5 md:col-span-2">
+          <span className="text-[10px] font-bold text-zinc-400 uppercase">Select Categories</span>
+          <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 bg-zinc-50 dark:bg-zinc-955 max-h-28 overflow-y-auto space-y-1.5">
+            {categoriesList && categoriesList.length > 0 ? (
+              categoriesList.map(cat => {
+                const catIdStr = String(cat.id)
+                const isChecked = selectedCategories.includes(catIdStr)
+                return (
+                  <label key={cat.id} className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300 cursor-pointer hover:text-emerald-500 transition-colors select-none">
+                    <input 
+                      type="checkbox" 
+                      checked={isChecked}
+                      onChange={() => {
+                        setSelectedCategories(prev => 
+                          prev.includes(catIdStr) 
+                            ? prev.filter(id => id !== catIdStr) 
+                            : [...prev, catIdStr]
+                        )
+                      }}
+                      className="h-3.5 w-3.5 rounded border-zinc-300 text-[#3eb075] focus:ring-[#3eb075] cursor-pointer"
+                    />
+                    {cat.name}
+                  </label>
+                )
+              })
+            ) : (
+              <span className="text-[10px] text-zinc-400 italic">No categories loaded.</span>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-col gap-1.5">

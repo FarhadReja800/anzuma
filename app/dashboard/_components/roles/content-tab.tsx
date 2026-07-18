@@ -53,63 +53,107 @@ export function ContentTab({ permissions, triggerToast }: ContentTabProps) {
     return false
   }, [permissions, activeSubTab])
 
+  const fetchCategories = React.useCallback(async () => {
+    try {
+      const response = await fetch("/api/category/get-categories")
+      if (response.ok) {
+        const json = await response.json()
+        const rawList = Array.isArray(json) ? json : (json.data || [])
+        if (Array.isArray(rawList) && rawList.length > 0) {
+          const formatted: TCategory[] = rawList.map((c: any) => ({
+            id: c._id || c.id || c.slug || String(c.name).toLowerCase(),
+            name: c.name,
+            slug: c.slug,
+            parent: c.parent ? (typeof c.parent === "object" ? (c.parent._id || c.parent.id || c.parent.name) : c.parent) : null,
+            icon: c.icon || "tag",
+            order: c.order || 0,
+            isActive: c.isActive !== false
+          }))
+          setCategories(formatted)
+          localStorage.setItem("arzuma_content_categories", JSON.stringify(formatted))
+          return
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load live categories from API:", error)
+    }
+
+    // Fallback to localStorage if API fails/returns empty
+    const storedCategories = localStorage.getItem("arzuma_content_categories")
+    setCategories(storedCategories ? JSON.parse(storedCategories) : [])
+  }, [])
+
+  const fetchProjects = React.useCallback(async () => {
+    try {
+      const response = await fetch("/api/product/get-products")
+      if (response.ok) {
+        const json = await response.json()
+        const rawList = Array.isArray(json) ? json : (json.data || [])
+        if (Array.isArray(rawList)) {
+          const formatted: Project[] = rawList.map((p: Omit<Project, "id"> & { _id?: string | number; id?: string | number }) => ({
+            id: p._id ?? p.id ?? "",
+            name: p.name,
+            slug: p.slug,
+            sku: p.sku,
+            price: p.price,
+            salePrice: p.salePrice,
+            onSale: p.onSale,
+            description: p.description,
+            shortDescription: p.shortDescription,
+            images: p.images || [],
+            categories: p.categories || [],
+            tags: p.tags || [],
+            colors: p.colors || [],
+            sizes: p.sizes || [],
+            stockQuantity: p.stockQuantity,
+            inStock: p.inStock,
+            ratings: p.ratings,
+            reviewsCount: p.reviewsCount,
+            reviews: p.reviews || [],
+            additionalInformation: p.additionalInformation || { weight: "", dimensions: "" },
+            isActive: p.isActive
+          }))
+          setProjects(formatted)
+          localStorage.setItem("arzuma_content_projects", JSON.stringify(formatted))
+          return
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load live products/projects from API:", error)
+    }
+
+    const storedProjects = localStorage.getItem("arzuma_content_projects")
+    setProjects(storedProjects ? JSON.parse(storedProjects) : [])
+  }, [])
+
   // Sync state on load
   React.useEffect(() => {
-    const defaultProjects: Project[] = [
-      {
-        id: "PROJ-101",
-        name: "Premium Cotton T-Shirt",
-        slug: "premium-cotton-t-shirt",
-        sku: "TSHIRT-001",
-        price: 1200,
-        salePrice: 999,
-        onSale: true,
-        description: "Premium quality 100% cotton t-shirt with soft fabric and comfortable fit.",
-        shortDescription: "Soft premium cotton t-shirt.",
-        images: ["https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=300"],
-        categories: ["68748e89d9f9b3d9e4b1a001", "68748e89d9f9b3d9e4b1a002"],
-        tags: ["Cotton", "Fashion", "Men", "Summer"],
-        colors: [
-          { name: "Black", value: "#000000" },
-          { name: "White", value: "#FFFFFF" },
-          { name: "Blue", value: "#0000FF" }
-        ],
-        sizes: ["S", "M", "L", "XL"],
-        stockQuantity: 50,
-        inStock: true,
-        ratings: 4.8,
-        reviewsCount: 2,
-        reviews: [
-          { reviewerName: "John Doe", reviewerEmail: "john@example.com", rating: 5, comment: "Excellent.", createdAt: "2026-07-14" },
-          { reviewerName: "Jane Smith", reviewerEmail: "jane@example.com", rating: 4, comment: "Nice.", createdAt: "2026-07-13" }
-        ],
-        additionalInformation: { weight: "250g", dimensions: "30 x 25 x 3 cm" },
-        isActive: true
+    let active = true
+
+    async function loadData() {
+      // 1. Load Projects
+      if (active) {
+        await fetchProjects()
       }
-    ]
-    const defaultCategories: TCategory[] = [
-      { id: "CAT-1", name: "Clothing", slug: "clothing", parent: null, icon: "shirt", order: 1, isActive: true },
-      { id: "CAT-2", name: "Dresses", slug: "dresses", parent: "CAT-1", icon: "package", order: 2, isActive: true },
-      { id: "CAT-3", name: "Collection", slug: "collection", parent: null, icon: "tag", order: 3, isActive: true }
-    ]
-    const defaultBlogs: Blog[] = [
-      { id: 1, title: "The Best Products That Shape Fashion", category: "Collection", date: "April 25, 2022", excerpt: "Trends shaping modern product curation." },
-      { id: 2, title: "New Finds From Tuckernuck", category: "Clothing", date: "April 26, 2022", excerpt: "Seasonal collections for your wardrobe." }
-    ]
 
-    const timer = setTimeout(() => {
-      const storedProjects = localStorage.getItem("arzuma_content_projects")
-      setProjects(storedProjects ? JSON.parse(storedProjects) : defaultProjects)
-
-      const storedCategories = localStorage.getItem("arzuma_content_categories")
-      setCategories(storedCategories ? JSON.parse(storedCategories) : defaultCategories)
-
+      // 2. Load Blogs from localStorage
       const storedBlogs = localStorage.getItem("arzuma_content_blogs")
-      setBlogs(storedBlogs ? JSON.parse(storedBlogs) : defaultBlogs)
-    }, 0)
+      if (active) {
+        setBlogs(storedBlogs ? JSON.parse(storedBlogs) : [])
+      }
 
-    return () => clearTimeout(timer)
-  }, [])
+      // 3. Load Categories
+      if (active) {
+        await fetchCategories()
+      }
+    }
+
+    loadData()
+
+    return () => {
+      active = false
+    }
+  }, [fetchCategories, fetchProjects])
 
   // Action Persistors
   const saveProjects = (updated: Project[]) => {
@@ -127,34 +171,88 @@ export function ContentTab({ permissions, triggerToast }: ContentTabProps) {
     localStorage.setItem("arzuma_content_blogs", JSON.stringify(updated))
   }
 
-  // Create Handlers
-  const handleCreateProject = (data: Partial<Project>) => {
-    const newItem: Project = {
-      ...data,
-      id: `PROJ-${Date.now()}`,
-      reviews: [
-        {
-          reviewerName: "John Doe",
-          reviewerEmail: "john@example.com",
-          rating: 5,
-          comment: "Excellent quality and comfortable.",
-          createdAt: new Date().toISOString()
-        }
-      ]
-    } as Project
-    saveProjects([...projects, newItem])
-    triggerToast("Project created successfully with standard schema!")
-    setIsAdding(false)
+  const handleCreateProject = async (data: Partial<Project>) => {
+    try {
+      const token = localStorage.getItem("arzuma_token")
+      if (!token) {
+        throw new Error("Your authentication session has expired or is invalid. Please log out and log in again.")
+      }
+      
+      const payload = {
+        name: data.name,
+        slug: data.slug || data.name?.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, ""),
+        sku: data.sku || `PROD-${Date.now()}`,
+        price: Number(data.price) || 0,
+        salePrice: Number(data.salePrice) || 0,
+        onSale: data.onSale !== false,
+        description: data.description || "",
+        shortDescription: data.shortDescription || "",
+        images: data.images || [],
+        categories: data.categories || [],
+        tags: data.tags || [],
+        colors: data.colors || [],
+        sizes: data.sizes || [],
+        stockQuantity: Number(data.stockQuantity) || 0,
+        inStock: data.inStock !== false,
+        ratings: data.ratings || 0,
+        reviewsCount: data.reviewsCount || 0,
+        reviews: data.reviews || [],
+        additionalInformation: data.additionalInformation || { weight: "", dimensions: "" },
+        isActive: data.isActive !== false
+      }
+
+      const response = await fetch("/api/product/create-product", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": token.startsWith("Bearer ") ? token : `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      })
+
+      const resData = await response.json()
+      if (!response.ok) {
+        throw new Error(resData.error || resData.message || "Failed to create product.")
+      }
+
+      triggerToast("Product created successfully in database!")
+      setIsAdding(false)
+      await fetchProjects()
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "Error creating product."
+      console.error("Product creation error:", err)
+      triggerToast(`Error: ${errMsg}`)
+    }
   }
 
-  const handleCreateCategory = (data: Partial<TCategory>) => {
-    const newItem: TCategory = {
-      ...data,
-      id: `CAT-${Date.now()}`
-    } as TCategory
-    saveCategories([...categories, newItem])
-    triggerToast("Category created successfully!")
-    setIsAdding(false)
+  const handleCreateCategory = async (data: Partial<TCategory>) => {
+    try {
+      const token = localStorage.getItem("arzuma_token")
+      if (!token) {
+        throw new Error("Your authentication session has expired or is invalid. Please log out and log in again.")
+      }
+      const response = await fetch("/api/category/create-category", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": token.startsWith("Bearer ") ? token : `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      })
+
+      const resData = await response.json()
+      if (!response.ok) {
+        throw new Error(resData.error || resData.message || "Failed to create category.")
+      }
+
+      triggerToast("Category created successfully in database!")
+      setIsAdding(false)
+      await fetchCategories()
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "Error creating category."
+      console.error("Category creation error:", err)
+      triggerToast(`Error: ${errMsg}`)
+    }
   }
 
   const handleCreateBlog = (data: Partial<Blog>) => {
@@ -262,10 +360,10 @@ export function ContentTab({ permissions, triggerToast }: ContentTabProps) {
 
       {/* Adding / Editing Views */}
       {isAdding && activeSubTab === "projects" && (
-        <ProjectForm onSubmit={handleCreateProject} onCancel={() => setIsAdding(false)} />
+        <ProjectForm categoriesList={categories} onSubmit={handleCreateProject} onCancel={() => setIsAdding(false)} />
       )}
       {editingId !== null && activeSubTab === "projects" && (
-        <ProjectForm initialData={activeEditingProject} onSubmit={handleUpdateProject} onCancel={() => setEditingId(null)} />
+        <ProjectForm categoriesList={categories} initialData={activeEditingProject} onSubmit={handleUpdateProject} onCancel={() => setEditingId(null)} />
       )}
 
       {isAdding && activeSubTab === "categories" && (

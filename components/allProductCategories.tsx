@@ -75,7 +75,70 @@ export const MAIN_CATEGORIES = [
   { id: "watches", name: "Watches" }
 ]
 
+interface APICategory {
+  _id?: string;
+  id?: string;
+  name: string;
+  slug: string;
+  parent?: string | { _id?: string; id?: string; name?: string } | null;
+  icon?: string;
+  order?: number;
+  isActive?: boolean;
+}
+
 export const AllProductCategories = ({ initialCategory, initialSubcategory, initialSearch }: { initialCategory?: string; initialSubcategory?: string; initialSearch?: string } = {}) => {
+  const [categories, setCategories] = React.useState<Array<{ id: string; name: string; subcategories?: string[] }>>(MAIN_CATEGORIES)
+
+  React.useEffect(() => {
+    let active = true
+    async function loadCategories() {
+      try {
+        const response = await fetch("/api/category/get-categories")
+        if (!response.ok) throw new Error("Failed to fetch")
+        const json = await response.json()
+        
+        const rawList = Array.isArray(json) ? json : (json.data || [])
+        if (!Array.isArray(rawList) || rawList.length === 0) return
+
+        const parents = rawList.filter((c: APICategory) => !c.parent)
+        const children = rawList.filter((c: APICategory) => c.parent)
+
+        const formatted = parents.map((parent: APICategory) => {
+          const parentId = parent._id || parent.id || parent.slug || parent.name.toLowerCase()
+          
+          const subs = children
+            .filter((child: APICategory) => {
+              const p = child.parent
+              const pId = parent._id || parent.id
+              return (
+                p === pId ||
+                p === parent.name ||
+                p === parent.slug ||
+                (typeof p === "object" && p !== null && (p._id === pId || p.id === pId || p.name === parent.name))
+              )
+            })
+            .map((child: APICategory) => child.name)
+
+          return {
+            id: parent.slug || parentId,
+            name: parent.name,
+            subcategories: subs.length > 0 ? subs : undefined
+          }
+        })
+
+        if (active && formatted.length > 0) {
+          setCategories(formatted)
+        }
+      } catch (error) {
+        console.error("Failed to load categories from API:", error)
+      }
+    }
+    loadCategories()
+    return () => {
+      active = false
+    }
+  }, [])
+
   // Sidebar accordion states (Men is expanded/checked by default)
   const [expandedCategories, setExpandedCategories] = React.useState<Record<string, boolean>>({
     [initialCategory || "men"]: true
@@ -213,6 +276,18 @@ export const AllProductCategories = ({ initialCategory, initialSubcategory, init
         if (parentId === "men") return product.collections.includes("men")
         if (parentId === "women") return product.collections.includes("women")
         if (parentId === "outerwear") return product.collections.includes("outerwear")
+
+        // Generic fallback for custom parent categories
+        if (parentId) {
+          const parentName = categories.find(c => c.id === parentId)?.name.toLowerCase()
+          if (parentName) {
+            return (
+              (product.collections as string[]).includes(parentId) ||
+              (product.collections as string[]).includes(parentName) ||
+              product.category.toLowerCase() === parentName
+            )
+          }
+        }
         return true
       }
 
@@ -232,9 +307,20 @@ export const AllProductCategories = ({ initialCategory, initialSubcategory, init
       if (parentId === "baby")          return false // no baby products yet
       if (parentId === "kids")          return false // no kids products yet
 
+      // Generic fallback for custom parent categories
+      const parentObj = categories.find(c => c.id === parentId)
+      if (parentObj) {
+        const parentName = parentObj.name.toLowerCase()
+        return (
+          product.category.toLowerCase() === parentName ||
+          (product.collections as string[]).includes(parentId) ||
+          (product.collections as string[]).includes(parentName)
+        )
+      }
+
       return false
     },
-    [selectedMainCategories, selectedSubcategories]
+    [selectedMainCategories, selectedSubcategories, categories]
   )
 
   // Calculate counts dynamically based on category & price filters, but BEFORE applying color, size, and status filters.
@@ -365,7 +451,7 @@ export const AllProductCategories = ({ initialCategory, initialSubcategory, init
               </h2>
 
               <ul className="space-y-4">
-                {MAIN_CATEGORIES.map((cat) => {
+                {categories.map((cat) => {
                   const isChecked = selectedMainCategories.includes(cat.id)
                   const isExpanded = !!expandedCategories[cat.id]
                   const hasSubs = !!cat.subcategories

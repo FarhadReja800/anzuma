@@ -88,6 +88,7 @@ function RelatedProductCard({ product }: { product: Product }) {
             src={product.imageUrl || "/products/orange-hoodie.png"}
             alt={product.name}
             fill
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1280px) 25vw, 300px"
             className="object-cover transition-transform duration-700 group-hover:scale-103"
           />
         </Link>

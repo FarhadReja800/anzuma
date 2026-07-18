@@ -59,6 +59,8 @@ export function ModeratorView({ user, handleLogout }: ModeratorViewProps) {
       const storedTickets = localStorage.getItem("arzuma_tickets")
       if (storedTickets) {
         setTickets(JSON.parse(storedTickets))
+      } else {
+        setTickets([])
       }
 
       // Load reviews from localStorage
@@ -66,8 +68,7 @@ export function ModeratorView({ user, handleLogout }: ModeratorViewProps) {
       if (storedReviews) {
         setReviews(JSON.parse(storedReviews))
       } else {
-        localStorage.setItem("arzuma_reviews", JSON.stringify(DEFAULT_REVIEWS))
-        setReviews(DEFAULT_REVIEWS)
+        setReviews([])
       }
 
       // Load RBAC permissions

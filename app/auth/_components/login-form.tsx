@@ -34,9 +34,11 @@ export function LoginForm() {
       setError(null)
 
       const response = await loginUser({ email, password })
+      console.log("Login API Response:", response)
 
       // Extract token and save to localStorage
-      const token = response.token || response.accessToken || response.data?.token || ""
+      const token = response.token || response.accessToken || response.data?.token || response.data?.accessToken || ""
+      console.log("Extracted token:", token)
       if (token) {
         localStorage.setItem("arzuma_token", token)
       }

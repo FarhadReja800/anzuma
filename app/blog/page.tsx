@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { BlogPost } from "./_components/types"
 import { BlogDetail } from "./_components/blog-detail"
 import { BlogList } from "./_components/blog-list"
@@ -69,16 +70,22 @@ const allTags = [
   "woocommerce"
 ]
 
-export default function BlogPage() {
+function BlogPageContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const urlId = searchParams.get("id")
+
   const [searchQuery, setSearchQuery] = React.useState("")
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)
   const [selectedTag, setSelectedTag] = React.useState<string | null>(null)
-  const [selectedPostId, setSelectedPostId] = React.useState<number | null>(null)
 
-  // Memoized selected post
+  // Memoized selected post derived directly from URL parameter to avoid cascading renders
   const selectedPost = React.useMemo(() => {
-    return blogPosts.find((post) => post.id === selectedPostId) || null
-  }, [selectedPostId])
+    if (!urlId) return null
+    const parsedId = Number(urlId)
+    if (isNaN(parsedId)) return null
+    return blogPosts.find((post) => post.id === parsedId) || null
+  }, [urlId])
 
   // Filter logic for main blog feed listing
   const filteredPosts = React.useMemo(() => {
@@ -104,25 +111,30 @@ export default function BlogPage() {
   }
 
   const handleTagClick = (tag: string) => {
-    setSelectedPostId(null) // Return to list view
+    router.push("/blog")
     setSelectedTag(tag === selectedTag ? null : tag)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   const handleCategoryClick = (category: string) => {
-    setSelectedPostId(null) // Return to list view
+    router.push("/blog")
     setSelectedCategory(category === selectedCategory ? null : category)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   const handlePostClick = (postId: number) => {
-    setSelectedPostId(postId)
+    router.push(`/blog?id=${postId}`)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   const handleSearchChange = (query: string) => {
-    setSelectedPostId(null) // Return to list view when searching
+    router.push("/blog")
     setSearchQuery(query)
+  }
+
+  const handleBack = () => {
+    router.push("/blog")
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   return (
@@ -135,7 +147,7 @@ export default function BlogPage() {
             {selectedPost ? (
               <BlogDetail
                 post={selectedPost}
-                onBack={() => setSelectedPostId(null)}
+                onBack={handleBack}
                 onCategoryClick={handleCategoryClick}
                 onTagClick={handleTagClick}
               />
@@ -171,5 +183,17 @@ export default function BlogPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function BlogPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="flex-1 bg-white text-zinc-950 dark:bg-black dark:text-zinc-50 font-sans py-20 text-center">
+        Loading Blog...
+      </div>
+    }>
+      <BlogPageContent />
+    </React.Suspense>
   )
 }

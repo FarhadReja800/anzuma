@@ -99,6 +99,7 @@ export function NewCollections(props: NewCollectionsProps) {
                   alt={title} 
                   fill 
                   priority
+                  sizes="(max-width: 1024px) 85vw, 550px"
                   className="object-cover hover:scale-[1.01] transition-transform duration-700"
                 />
                 <div className="absolute -bottom-10 -right-[15%] w-[55%] aspect-[4/5] border-[12px] border-white dark:border-black shadow-2xl bg-zinc-50 dark:bg-zinc-900">
@@ -106,6 +107,7 @@ export function NewCollections(props: NewCollectionsProps) {
                     src={image2} 
                     alt={title} 
                     fill 
+                    sizes="(max-width: 1024px) 55vw, 350px"
                     className="object-cover hover:scale-[1.01] transition-transform duration-700"
                   />
                 </div>
@@ -119,6 +121,7 @@ export function NewCollections(props: NewCollectionsProps) {
                     alt={title} 
                     fill 
                     priority
+                    sizes="(max-width: 1024px) 100vw, 640px"
                     className="object-cover hover:scale-102 transition-transform duration-700"
                   />
                 </div>
@@ -142,6 +145,7 @@ export function NewCollections(props: NewCollectionsProps) {
                   alt={title} 
                   fill 
                   priority
+                  sizes="(max-width: 1024px) 100vw, 640px"
                   className="object-cover hover:scale-102 transition-transform duration-700"
                 />
               </div>
@@ -224,6 +228,7 @@ export function NewCollections(props: NewCollectionsProps) {
                     src={image2} 
                     alt={title} 
                     fill 
+                    sizes="(max-width: 1024px) 100vw, 640px"
                     className="object-cover hover:scale-102 transition-transform duration-700"
                   />
                 </div>

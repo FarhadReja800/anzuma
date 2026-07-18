@@ -4,43 +4,15 @@ import { products, Product, CartItem } from "@/lib/data"
 import { DashboardUser, Address, Order, SupportTicket } from "../_components/types"
 
 export const DEFAULT_USER: DashboardUser = {
-  name: "Farhad Reja",
-  email: "demo@arzuma.com",
-  phone: "+880 1712-345678",
-  tier: "Gold",
-  points: 1250,
+  name: "",
+  email: "",
+  phone: "",
+  tier: "Bronze",
+  points: 0,
   role: "customer"
 }
 
-export const INITIAL_ORDERS: Order[] = [
-  {
-    id: "ORD-12345",
-    date: "June 30, 2026",
-    product: "Basic High-Neck Puff Jacket (Black, M)",
-    price: 69.00,
-    status: "Shipped",
-    trackingId: "TRK-987654321",
-    imageIndex: 0
-  },
-  {
-    id: "ORD-67890",
-    date: "July 2, 2026",
-    product: "Tailored Wide-Leg Trousers (Beige, L)",
-    price: 24.90,
-    status: "Processing",
-    trackingId: "TRK-123456789",
-    imageIndex: 2
-  },
-  {
-    id: "ORD-11111",
-    date: "July 5, 2026",
-    product: "Classic Leather Crossbody Bag",
-    price: 49.99,
-    status: "Delivered",
-    trackingId: "TRK-456789123",
-    imageIndex: 4
-  }
-]
+export const INITIAL_ORDERS: Order[] = []
 
 export function useDashboardState() {
   const router = useRouter()
@@ -54,40 +26,27 @@ export function useDashboardState() {
   
   // Addresses State
   const [billingAddress, setBillingAddress] = React.useState<Address>({
-    name: "Farhad Reja",
-    street: "12/A Dhanmondi R/A",
-    city: "Dhaka",
-    state: "Dhaka Division",
-    zip: "1209",
-    country: "Bangladesh",
-    phone: "+880 1712-345678"
+    name: "",
+    street: "",
+    city: "",
+    state: "",
+    zip: "",
+    country: "",
+    phone: ""
   })
   
   const [shippingAddress, setShippingAddress] = React.useState<Address>({
-    name: "Farhad Reja",
-    street: "House 45, Road 11, Banani",
-    city: "Dhaka",
-    state: "Dhaka Division",
-    zip: "1213",
-    country: "Bangladesh",
-    phone: "+880 1712-345678"
+    name: "",
+    street: "",
+    city: "",
+    state: "",
+    zip: "",
+    country: "",
+    phone: ""
   })
 
   // Support Tickets State
-  const [tickets, setTickets] = React.useState<SupportTicket[]>([
-    {
-      id: "TCK-872",
-      subject: "Exchange size for Puff Jacket",
-      category: "Return Request",
-      priority: "Medium",
-      status: "Answered",
-      date: "July 1, 2026",
-      messages: [
-        { sender: "user", text: "I received the jacket but M is a bit too small for me. Can I exchange it for L?", time: "10:15 AM" },
-        { sender: "agent", text: "Hi Farhad, yes! We can arrange a size swap. I have initiated the exchange request. Our courier partner will pick up the size M item within 48 hours and deliver the size L size at the same time.", time: "11:30 AM" }
-      ]
-    }
-  ])
+  const [tickets, setTickets] = React.useState<SupportTicket[]>([])
 
   // UI Edit Modal states
   const [isEditingBilling, setIsEditingBilling] = React.useState(false)
@@ -125,26 +84,21 @@ export function useDashboardState() {
         try {
           const parsed = JSON.parse(savedUser)
           setUser({
-            name: parsed.name || DEFAULT_USER.name,
-            email: parsed.email || DEFAULT_USER.email,
-            phone: parsed.phone || DEFAULT_USER.phone || "",
-            tier: parsed.tier || DEFAULT_USER.tier,
-            points: parsed.points || DEFAULT_USER.points,
+            name: parsed.name || "",
+            email: parsed.email || "",
+            phone: parsed.phone || "",
+            tier: parsed.tier || "Bronze",
+            points: parsed.points || 0,
             role: parsed.role || "customer"
           })
-          setProfileName(parsed.name || DEFAULT_USER.name)
-          setProfileEmail(parsed.email || DEFAULT_USER.email)
-          setProfilePhone(parsed.phone || DEFAULT_USER.phone || "")
+          setProfileName(parsed.name || "")
+          setProfileEmail(parsed.email || "")
+          setProfilePhone(parsed.phone || "")
         } catch (e) {
-          setProfileName(DEFAULT_USER.name)
-          setProfileEmail(DEFAULT_USER.email)
-          setProfilePhone(DEFAULT_USER.phone || "")
+          router.push("/auth")
         }
       } else {
-        localStorage.setItem("arzuma_user", JSON.stringify(DEFAULT_USER))
-        setProfileName(DEFAULT_USER.name)
-        setProfileEmail(DEFAULT_USER.email)
-        setProfilePhone(DEFAULT_USER.phone || "")
+        router.push("/auth")
       }
 
       // 2. Load Wishlist
@@ -161,8 +115,7 @@ export function useDashboardState() {
       if (storedOrders) {
         setOrders(JSON.parse(storedOrders))
       } else {
-        localStorage.setItem("arzuma_orders", JSON.stringify(INITIAL_ORDERS))
-        setOrders(INITIAL_ORDERS)
+        setOrders([])
       }
 
       // 5. Load Addresses
@@ -183,6 +136,8 @@ export function useDashboardState() {
       const storedTickets = localStorage.getItem("arzuma_tickets")
       if (storedTickets) {
         setTickets(JSON.parse(storedTickets))
+      } else {
+        setTickets([])
       }
     }
 

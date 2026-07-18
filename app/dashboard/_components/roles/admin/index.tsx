@@ -78,43 +78,65 @@ export function AdminView({ user, handleLogout }: AdminViewProps) {
   }
 
   React.useEffect(() => {
-    const timer = setTimeout(() => {
-      // Load products
-      const storedProducts = localStorage.getItem("arzuma_products")
-      if (storedProducts) {
-        setProducts(JSON.parse(storedProducts))
-      } else {
-        localStorage.setItem("arzuma_products", JSON.stringify(initialProducts))
-        setProducts(initialProducts)
+    let active = true
+
+    async function loadData() {
+      // 1. Fetch products from API
+      try {
+        const response = await fetch("/api/product/get-products")
+        if (response.ok) {
+          const json = await response.json()
+          const rawList = Array.isArray(json) ? json : (json.data || [])
+          if (Array.isArray(rawList)) {
+            const mappedList = rawList.map((p: Omit<Product, "id"> & { _id?: string | number; id?: string | number }) => ({
+              ...p,
+              id: p._id || p.id
+            })) as unknown as Product[]
+            if (active) {
+              setProducts(mappedList)
+              localStorage.setItem("arzuma_products", JSON.stringify(mappedList))
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load products from API:", error)
+        if (active) {
+          const storedProducts = localStorage.getItem("arzuma_products")
+          setProducts(storedProducts ? JSON.parse(storedProducts) : [])
+        }
       }
 
-      // Load orders
+      // 2. Load orders
       const storedOrders = localStorage.getItem("arzuma_orders")
-      if (storedOrders) {
-        setOrders(JSON.parse(storedOrders))
+      if (active) {
+        setOrders(storedOrders ? JSON.parse(storedOrders) : [])
       }
 
-      // Load coupons
+      // 3. Load coupons
       const storedCoupons = localStorage.getItem("arzuma_coupons")
-      if (storedCoupons) {
-        setCoupons(JSON.parse(storedCoupons))
-      } else {
-        localStorage.setItem("arzuma_coupons", JSON.stringify(DEFAULT_COUPONS))
-        setCoupons(DEFAULT_COUPONS)
+      if (active) {
+        setCoupons(storedCoupons ? JSON.parse(storedCoupons) : [])
       }
 
-      // Load users
+      // 4. Load users
       const storedUsers = localStorage.getItem("arzuma_all_users")
-      if (storedUsers) {
-        setUsers(JSON.parse(storedUsers))
+      if (active) {
+        setUsers(storedUsers ? JSON.parse(storedUsers) : [])
       }
 
-      // Load RBAC permissions
+      // 5. Load RBAC permissions
       const allPerms = getRbacPermissions()
-      setPermissions(allPerms.admin || DEFAULT_RBAC_PERMISSIONS.admin)
-    }, 0)
+      if (active) {
+        setPermissions(allPerms.admin || DEFAULT_RBAC_PERMISSIONS.admin)
+      }
+    }
 
-    return () => clearTimeout(timer)
+    const timer = setTimeout(loadData, 0)
+
+    return () => {
+      active = false
+      clearTimeout(timer)
+    }
   }, [])
 
   // Sync helpers

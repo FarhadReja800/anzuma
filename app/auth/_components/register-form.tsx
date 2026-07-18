@@ -35,9 +35,11 @@ export function RegisterForm() {
         password: password,
         role: "user", // Default role tested in postman user register request
       })
+      console.log("Register API Response:", response)
 
       // If registration returns token/session info, save it
-      const token = response.token || response.accessToken || response.data?.token || ""
+      const token = response.token || response.accessToken || response.data?.token || response.data?.accessToken || ""
+      console.log("Extracted token:", token)
       if (token) {
         localStorage.setItem("arzuma_token", token)
       }

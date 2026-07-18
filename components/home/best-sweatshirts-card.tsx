@@ -57,6 +57,7 @@ export function BestSweatshirtsCard({
               alt={title} 
               fill 
               priority
+              sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-102"
             />
           </div>

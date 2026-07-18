@@ -46,8 +46,8 @@ export function ReportsTab({ products = [] }: ReportsTabProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fadeInFast">
-      <div className="bg-zinc-900 border border-zinc-800 p-6">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200 mb-6">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.01)] rounded-2xl">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-black dark:text-zinc-200 mb-6">
           Stock Value Contribution
         </h3>
         
@@ -57,14 +57,14 @@ export function ReportsTab({ products = [] }: ReportsTabProps) {
             <div 
               key={cat.name} 
               className={`flex items-center justify-between text-xs pb-2 ${
-                idx < mappedCategories.length - 1 ? "border-b border-zinc-850" : ""
+                idx < mappedCategories.length - 1 ? "border-b border-zinc-100 dark:border-zinc-800" : ""
               }`}
             >
               <div className="flex items-center gap-2">
-                <span className={`h-3 w-3 ${cat.color}`}></span>
-                <span className="font-bold text-zinc-350 uppercase">{cat.name}</span>
+                <span className={`h-3 w-3 rounded ${cat.color}`}></span>
+                <span className="font-bold text-black/75 dark:text-zinc-300 uppercase">{cat.name}</span>
               </div>
-              <span className="font-mono text-zinc-300">
+              <span className="font-mono text-black dark:text-zinc-200 font-semibold">
                 ${cat.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({cat.percentage.toFixed(0)}%)
               </span>
             </div>
@@ -72,43 +72,43 @@ export function ReportsTab({ products = [] }: ReportsTabProps) {
         </div>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 p-6 flex flex-col justify-between">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 flex flex-col justify-between shadow-[0_1px_3px_rgba(0,0,0,0.01)] rounded-2xl">
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-200 mb-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-black dark:text-zinc-200 mb-4">
             Logistics Performance Index
           </h3>
-          <p className="text-[11px] text-zinc-400 leading-relaxed mb-6">
+          <p className="text-[11px] text-black/70 dark:text-zinc-450 leading-relaxed mb-6">
             Logistics metrics measured based on shipper turnaround times and warehouse packing operations.
           </p>
 
           <div className="space-y-4">
             <div>
-              <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
+              <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-black/60 dark:text-zinc-400 mb-1.5">
                 <span>Order Fulfillment Speed</span>
                 <span>96.4% (Optimal)</span>
               </div>
-              <div className="h-1 bg-zinc-950">
-                <div className="h-full bg-indigo-500" style={{ width: "96.4%" }}></div>
+              <div className="h-1.5 bg-zinc-100 dark:bg-zinc-950 rounded-full overflow-hidden">
+                <div className="h-full bg-indigo-500 rounded-full" style={{ width: "96.4%" }}></div>
               </div>
             </div>
 
             <div>
-              <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
+              <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-black/60 dark:text-zinc-400 mb-1.5">
                 <span>Vendor Supply Accuracy</span>
                 <span>98.8% (Excellent)</span>
               </div>
-              <div className="h-1 bg-zinc-950">
-                <div className="h-full bg-indigo-500" style={{ width: "98.8%" }}></div>
+              <div className="h-1.5 bg-zinc-100 dark:bg-zinc-955 rounded-full overflow-hidden">
+                <div className="h-full bg-indigo-500 rounded-full" style={{ width: "98.8%" }}></div>
               </div>
             </div>
 
             <div>
-              <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
+              <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-black/60 dark:text-zinc-400 mb-1.5">
                 <span>Return Rate Index</span>
                 <span>1.8% (Very Low)</span>
               </div>
-              <div className="h-1 bg-zinc-950">
-                <div className="h-full bg-emerald-500" style={{ width: "1.8%" }}></div>
+              <div className="h-1.5 bg-zinc-100 dark:bg-zinc-955 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500 rounded-full" style={{ width: "1.8%" }}></div>
               </div>
             </div>
           </div>

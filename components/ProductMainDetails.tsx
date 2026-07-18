@@ -144,6 +144,7 @@ export default function ProductMainDetails({ productId, col = "" }: ProductMainD
                   transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
                   transform: isZooming ? "scale(2.2)" : "scale(1)",
                 }}
+                sizes="(max-width: 1024px) 100vw, (max-width: 1280px) 42vw, 540px"
               />
               
               {/* Maximize Icon */}
@@ -168,6 +169,7 @@ export default function ProductMainDetails({ productId, col = "" }: ProductMainD
                     src={img}
                     alt={`${product.name} gallery image ${i + 1}`}
                     fill
+                    sizes="80px"
                     className="object-cover"
                   />
                 </button>
@@ -349,6 +351,7 @@ export default function ProductMainDetails({ productId, col = "" }: ProductMainD
                       src={p.imageUrl || "/products/orange-hoodie.png"}
                       alt={p.name}
                       fill
+                      sizes="48px"
                       className="object-cover"
                     />
                   </div>

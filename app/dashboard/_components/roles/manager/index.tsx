@@ -56,13 +56,7 @@ export function ManagerView({ user, handleLogout }: ManagerViewProps) {
       if (stored) {
         setProducts(JSON.parse(stored))
       } else {
-        const mapped = initialProducts.map((p, idx) => ({
-          ...p,
-          stockQty: idx % 3 === 0 ? 8 : idx % 5 === 0 ? 3 : 45,
-          supplier: idx % 2 === 0 ? "Arzuma Global Ltd." : "TexStyle Imports Inc."
-        }))
-        localStorage.setItem("arzuma_manager_stock", JSON.stringify(mapped))
-        setProducts(mapped)
+        setProducts([])
       }
 
       // Populate tickets
@@ -70,28 +64,7 @@ export function ManagerView({ user, handleLogout }: ManagerViewProps) {
       if (storedTickets) {
         setTickets(JSON.parse(storedTickets))
       } else {
-        const defaultTickets: SupportTicket[] = [
-          {
-            id: "TCK-872",
-            subject: "Exchange size for Puff Jacket",
-            category: "Return Request",
-            priority: "Medium",
-            status: "Answered",
-            date: "July 1, 2026",
-            messages: []
-          },
-          {
-            id: "TCK-990",
-            subject: "Refund request for wallet",
-            category: "Billing",
-            priority: "High",
-            status: "Open",
-            date: "July 4, 2026",
-            messages: []
-          }
-        ]
-        localStorage.setItem("arzuma_tickets", JSON.stringify(defaultTickets))
-        setTickets(defaultTickets)
+        setTickets([])
       }
 
       const allPerms = getRbacPermissions()

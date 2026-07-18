@@ -36,6 +36,7 @@ export interface AuthAPIResponse extends AuthUserResponse {
   user?: AuthUserResponse;
   data?: {
     token?: string;
+    accessToken?: string;
     user?: AuthUserResponse;
   };
 }

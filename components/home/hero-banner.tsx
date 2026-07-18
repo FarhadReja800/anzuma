@@ -119,6 +119,7 @@ export function HeroBanner({
                       alt={slide.imageAlt || ""} 
                       fill
                       priority
+                      sizes="(max-width: 768px) 100vw, 50vw"
                       className="object-contain w-full h-full object-center transition-transform duration-700"
                     />
                   </div>

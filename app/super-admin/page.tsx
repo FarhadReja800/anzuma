@@ -31,7 +31,7 @@ import {
   Video
 } from "lucide-react"
 
-import { DashboardUser } from "../dashboard/_components/types"
+import { DashboardUser, Order } from "../dashboard/_components/types"
 import { UsersTab } from "../dashboard/_components/roles/super-admin/users-tab"
 import { SettingsTab } from "../dashboard/_components/roles/super-admin/settings-tab"
 import { AuditTab } from "../dashboard/_components/roles/super-admin/audit-tab"
@@ -102,7 +102,7 @@ export default function SuperAdminDashboardPage() {
   const [newCouponDiscount, setNewCouponDiscount] = React.useState(15)
 
   // Orders tab states
-  const [orders, setOrders] = React.useState<any[]>([])
+  const [orders, setOrders] = React.useState<Order[]>([])
 
   // Settings Form State
   const [siteName, setSiteName] = React.useState("Arzuma")
@@ -129,14 +129,16 @@ export default function SuperAdminDashboardPage() {
 
   // Load initial configurations
   React.useEffect(() => {
-    const timer = setTimeout(() => {
+    let active = true
+
+    async function loadData() {
       // Validate session role
       const savedUser = localStorage.getItem("arzuma_user")
       if (savedUser) {
         try {
           const parsed = JSON.parse(savedUser)
           if (parsed.role === "superAdmin") {
-            setCurrentUser(parsed)
+            if (active) setCurrentUser(parsed)
           } else {
             router.push("/dashboard")
           }
@@ -146,57 +148,80 @@ export default function SuperAdminDashboardPage() {
       } else {
         router.push("/auth?mode=login")
       }
-      setLoading(false)
+      if (active) setLoading(false)
 
       const stored = localStorage.getItem("arzuma_all_users")
       if (stored) {
-        setUsers(JSON.parse(stored))
+        if (active) setUsers(JSON.parse(stored))
       } else {
         localStorage.setItem("arzuma_all_users", JSON.stringify(INITIAL_USERS))
-        setUsers(INITIAL_USERS)
+        if (active) setUsers(INITIAL_USERS)
       }
 
       const storedSettings = localStorage.getItem("arzuma_system_settings")
       if (storedSettings) {
         const parsed = JSON.parse(storedSettings)
-        setSiteName(parsed.siteName || "Arzuma")
-        setAllowRegistration(parsed.allowRegistration ?? true)
-        setMaintenanceMode(parsed.maintenanceMode ?? false)
+        if (active) {
+          setSiteName(parsed.siteName || "Arzuma")
+          setAllowRegistration(parsed.allowRegistration ?? true)
+          setMaintenanceMode(parsed.maintenanceMode ?? false)
+        }
       }
 
-      // Catalog & products
-      const storedProducts = localStorage.getItem("arzuma_products")
-      if (storedProducts) {
-        setProducts(JSON.parse(storedProducts))
-      } else {
-        localStorage.setItem("arzuma_products", JSON.stringify(initialProducts))
-        setProducts(initialProducts)
+      // Catalog & products (Fetch from API)
+      try {
+        const response = await fetch("/api/product/get-products")
+        if (response.ok) {
+          const json = await response.json()
+          const rawList = Array.isArray(json) ? json : (json.data || [])
+          if (Array.isArray(rawList)) {
+            const mappedList = rawList.map((p: Omit<Product, "id"> & { _id?: string | number; id?: string | number }) => ({
+              ...p,
+              id: p._id || p.id
+            })) as unknown as Product[]
+            if (active) {
+              setProducts(mappedList)
+              localStorage.setItem("arzuma_products", JSON.stringify(mappedList))
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load products from API:", error)
+        if (active) {
+          const storedProducts = localStorage.getItem("arzuma_products")
+          setProducts(storedProducts ? JSON.parse(storedProducts) : [])
+        }
       }
 
       // Coupons
       const storedCoupons = localStorage.getItem("arzuma_coupons")
       if (storedCoupons) {
-        setCoupons(JSON.parse(storedCoupons))
+        if (active) setCoupons(JSON.parse(storedCoupons))
       } else {
         localStorage.setItem("arzuma_coupons", JSON.stringify(DEFAULT_COUPONS))
-        setCoupons(DEFAULT_COUPONS)
+        if (active) setCoupons(DEFAULT_COUPONS)
       }
 
       // Orders
       const storedOrders = localStorage.getItem("arzuma_orders")
       if (storedOrders) {
-        setOrders(JSON.parse(storedOrders))
+        if (active) setOrders(JSON.parse(storedOrders))
       }
 
-      setPermissions(getRbacPermissions())
+      if (active) setPermissions(getRbacPermissions())
 
       // Check dark mode
       const isDark = document.documentElement.classList.contains("dark") || 
                      localStorage.getItem("theme") === "dark"
-      setIsDarkMode(isDark)
-    }, 0)
+      if (active) setIsDarkMode(isDark)
+    }
 
-    return () => clearTimeout(timer)
+    const timer = setTimeout(loadData, 0)
+
+    return () => {
+      active = false
+      clearTimeout(timer)
+    }
   }, [])
 
   const saveUsers = (updated: MockUser[]) => {
@@ -338,7 +363,7 @@ export default function SuperAdminDashboardPage() {
   }
 
   // Orders Dispatch
-  const handleUpdateOrderStatus = (orderId: string, status: any) => {
+  const handleUpdateOrderStatus = (orderId: string, status: Order["status"]) => {
     const updated = orders.map(o => {
       if (o.id === orderId) {
         return { 
