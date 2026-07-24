@@ -42,9 +42,17 @@ export interface TCategory {
 }
 
 export interface Blog {
-  id: number
+  id?: string | number
+  _id?: string
   title: string
   category: string
-  date: string
-  excerpt: string
+  date?: string
+  excerpt?: string
+  content?: string
+  image?: string
+  tags?: string[]
+  isPopular?: boolean
+  views?: number
+  slug?: string
+  createdAt?: string
 }

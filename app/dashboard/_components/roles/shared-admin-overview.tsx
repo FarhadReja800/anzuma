@@ -10,6 +10,8 @@ import {
   Filter,
 
 } from "lucide-react"
+import { WeeklyReportChart } from "@/components/dashboard/weekly-report-chart"
+import { LiveUsersCountryCard } from "@/components/dashboard/live-users-country-card"
 
 export interface AdminOverviewConfig {
   role: "superAdmin" | "admin" | "manager" | "moderator"
@@ -218,149 +220,12 @@ export function SharedAdminOverview({ config }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
         {/* Weekly Report Chart */}
-        <div className="lg:col-span-7 bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 rounded-2xl p-6 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="text-sm font-black text-zinc-850 dark:text-zinc-100 uppercase tracking-wide">{labels.weekly}</h3>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setWeekFilter("this")}
-                className={`px-3 py-1 text-[10px] font-bold rounded-full transition-colors cursor-pointer ${weekFilter === "this" ? "bg-emerald-500 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700"}`}
-              >
-                This week
-              </button>
-              <button
-                onClick={() => setWeekFilter("last")}
-                className={`px-3 py-1 text-[10px] font-bold rounded-full transition-colors cursor-pointer ${weekFilter === "last" ? "bg-emerald-500 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700"}`}
-              >
-                Last week
-              </button>
-              <button className="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer rounded">
-                <MoreVertical className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Metrics row */}
-          <div className="flex flex-wrap gap-6 mb-5">
-            {weeklyStats.map((s, i) => (
-              <div key={i}>
-                <p className="text-base font-black text-zinc-850 dark:text-zinc-100">{s.value}</p>
-                <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium border-b-2 border-emerald-400 pb-0.5 mt-0.5">{s.label}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Area Chart */}
-          <div style={{ height: "140px" }} className="w-full relative">
-            <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" preserveAspectRatio="none">
-              {/* Y grid lines */}
-              {[0, 1, 2, 3].map(i => (
-                <line key={i}
-                  x1={PAD_X} y1={PAD_Y + (i / 3) * UH}
-                  x2={W - PAD_X} y2={PAD_Y + (i / 3) * UH}
-                  stroke="currentColor" className="text-zinc-100 dark:text-zinc-800"
-                  strokeWidth="0.8" strokeDasharray="3 3"
-                />
-              ))}
-              <defs>
-                <linearGradient id="adminAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"   stopColor="#3eb075" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#3eb075" stopOpacity="0"    />
-                </linearGradient>
-              </defs>
-              <path d={area} fill="url(#adminAreaGrad)" />
-              <path d={line} fill="none" stroke="#3eb075" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              {/* Tooltip on peak */}
-              {(() => {
-                const peak = coords.reduce((a, b) => (a.y < b.y ? a : b))
-                return (
-                  <g>
-                    <circle cx={peak.x} cy={peak.y} r="5" fill="#3eb075" stroke="white" strokeWidth="2" />
-                    <rect x={peak.x - 22} y={peak.y - 30} width="44" height="22" rx="6" fill="#3eb075" />
-                    <text x={peak.x} y={peak.y - 15} textAnchor="middle" fill="white"
-                      style={{ fontSize: "9px", fontWeight: 700, fontFamily: "sans-serif" }}>
-                      Thursday
-                    </text>
-                    <text x={peak.x} y={peak.y - 5} textAnchor="middle" fill="white"
-                      style={{ fontSize: "8px", fontWeight: 600, fontFamily: "sans-serif" }}>
-                      14k
-                    </text>
-                  </g>
-                )
-              })()}
-              {/* X-axis day labels */}
-              {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d, i) => {
-                const x = PAD_X + (i / 6) * UW
-                return (
-                  <text key={d} x={x} y={H + 2} textAnchor="middle" fill="#a1a1aa"
-                    style={{ fontSize: "8px", fontWeight: 600, fontFamily: "sans-serif" }}>
-                    {d}
-                  </text>
-                )
-              })}
-            </svg>
-          </div>
+        <div className="lg:col-span-7">
+          <WeeklyReportChart title={labels.weekly} />
         </div>
 
-        {/* Right: Users Live + Sales by Country */}
-        <div className="lg:col-span-5 flex flex-col gap-5">
-
-          {/* Users in last 30 min */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800 rounded-2xl p-5 shadow-[0_1px_4px_rgba(0,0,0,0.04)] flex-1">
-            <div className="flex items-start justify-between mb-1">
-              <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Users in last 30 minutes</p>
-              <button className="p-1 text-zinc-400 hover:text-zinc-600 cursor-pointer rounded">
-                <MoreVertical className="h-3.5 w-3.5" />
-              </button>
-            </div>
-            <p className="text-3xl font-black text-zinc-850 dark:text-zinc-100 tracking-tight mb-2">21.5K</p>
-            <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium mb-3">Users per minute</p>
-            {/* Bar chart */}
-            <div className="flex items-end gap-0.5 h-10">
-              {BAR_DATA.map((v, i) => (
-                <div
-                  key={i}
-                  className="flex-1 bg-emerald-400 dark:bg-emerald-500 rounded-sm transition-all"
-                  style={{ height: `${(v / 24) * 100}%`, opacity: 0.6 + (v / 24) * 0.4 }}
-                />
-              ))}
-            </div>
-
-            {/* Sales by Country */}
-            <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-[11px] font-black text-zinc-700 dark:text-zinc-300 uppercase tracking-wide">Sales by Country</p>
-                <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Sales</p>
-              </div>
-              <div className="space-y-3">
-                {COUNTRY_SALES.map((c, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <span className="text-lg">{c.flag}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300">{c.country}</p>
-                        <span className={`text-[10px] font-black ${c.up ? "text-emerald-500" : "text-rose-500"}`}>
-                          {c.change}
-                        </span>
-                      </div>
-                      <div className="w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-blue-400 dark:bg-blue-500 rounded-full"
-                          style={{ width: i === 0 ? "70%" : i === 1 ? "70%" : "55%" }}
-                        />
-                      </div>
-                    </div>
-                    <span className="text-[11px] font-black text-zinc-600 dark:text-zinc-400 w-8 text-right">{c.sales}</span>
-                  </div>
-                ))}
-              </div>
-              <button className="w-full mt-4 py-2 border border-zinc-200 dark:border-zinc-700 rounded-xl text-[11px] font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer flex items-center justify-center gap-2">
-                <Globe className="h-3.5 w-3.5" />
-                View Insight
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* Right: Live Users + Sales by Country */}
+        <LiveUsersCountryCard className="lg:col-span-5" />
       </div>
 
       {/* ── Row 3: Transaction Table + Top Products ─────────────────────────── */}

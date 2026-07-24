@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
+import { SafeImage } from "@/components/ui/safe-image"
 import { X, ArrowRight } from "lucide-react"
 import { BlogPost } from "./types"
 
@@ -13,7 +13,7 @@ interface BlogListProps {
   onSearchQueryChange: (query: string) => void
   onCategoryClick: (category: string) => void
   onTagClick: (tag: string) => void
-  onPostClick: (postId: number) => void
+  onPostClick: (postId: string | number) => void
   clearFilters: () => void
 }
 
@@ -71,11 +71,10 @@ export function BlogList({
               onClick={() => onPostClick(post.id)}
               className="relative w-full aspect-[4/3] sm:aspect-[16/10] overflow-hidden bg-zinc-100 dark:bg-zinc-900 cursor-pointer"
             >
-              <Image
+              <SafeImage
                 src={post.image}
                 alt={post.title}
                 fill
-                priority={post.id === 1}
                 className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
               />
             </div>

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
+import { SafeImage } from "@/components/ui/safe-image"
 import { ArrowLeft } from "lucide-react"
 import { BlogPost } from "./types"
 
@@ -33,7 +33,7 @@ export function BlogDetail({ post, onBack, onCategoryClick, onTagClick }: BlogDe
       <article className="space-y-6">
         {/* Blog Image */}
         <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] overflow-hidden bg-zinc-100 dark:bg-zinc-900">
-          <Image
+          <SafeImage
             src={post.image}
             alt={post.title}
             fill

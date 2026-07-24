@@ -1,5 +1,6 @@
 export interface BlogPost {
-  id: number
+  id: string | number
+  _id?: string
   title: string
   excerpt: string
   date: string
@@ -8,4 +9,8 @@ export interface BlogPost {
   image: string
   paragraphs: string[]
   blockquote?: string
+  content?: string
+  views?: number
+  isPopular?: boolean
+  slug?: string
 }

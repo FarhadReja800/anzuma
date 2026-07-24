@@ -10,6 +10,34 @@ import { CategoryList } from "./content-manager/category-list"
 import { BlogForm } from "./content-manager/blog-form"
 import { BlogList } from "./content-manager/blog-list"
 import { RolePermissions } from "./rbac-config"
+import { createNews, getAllNews, updateNews, deleteNews } from "@/store/api/news"
+import { CreateNewsPayload, NewsItem, UpdateNewsPayload } from "@/data/news"
+
+interface RawCategory {
+  _id?: string
+  id?: string
+  name?: string
+  slug?: string
+  parent?: string | { _id?: string; id?: string; name?: string } | null
+  icon?: string
+  order?: number
+  isActive?: boolean
+}
+
+function formatImageUrl(url?: string): string {
+  if (!url || typeof url !== "string" || !url.trim()) {
+    return "https://images.unsplash.com/photo-1517694712202-14dd9538aa97"
+  }
+  const trimmed = url.trim()
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed
+  }
+  if (trimmed.startsWith("/")) {
+    const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000"
+    return `${origin}${trimmed}`
+  }
+  return `https://${trimmed}`
+}
 
 interface ContentTabProps {
   permissions: RolePermissions | null
@@ -60,10 +88,10 @@ export function ContentTab({ permissions, triggerToast }: ContentTabProps) {
         const json = await response.json()
         const rawList = Array.isArray(json) ? json : (json.data || [])
         if (Array.isArray(rawList) && rawList.length > 0) {
-          const formatted: TCategory[] = rawList.map((c: any) => ({
-            id: c._id || c.id || c.slug || String(c.name).toLowerCase(),
-            name: c.name,
-            slug: c.slug,
+          const formatted: TCategory[] = rawList.map((c: RawCategory) => ({
+            id: c._id || c.id || c.slug || String(c.name || "").toLowerCase(),
+            name: c.name || "",
+            slug: c.slug || "",
             parent: c.parent ? (typeof c.parent === "object" ? (c.parent._id || c.parent.id || c.parent.name) : c.parent) : null,
             icon: c.icon || "tag",
             order: c.order || 0,
@@ -126,23 +154,53 @@ export function ContentTab({ permissions, triggerToast }: ContentTabProps) {
     setProjects(storedProjects ? JSON.parse(storedProjects) : [])
   }, [])
 
+  const fetchBlogs = React.useCallback(async () => {
+    try {
+      const response = await getAllNews()
+      const rawList: NewsItem[] = Array.isArray(response) 
+        ? response 
+        : Array.isArray(response?.data)
+        ? response.data
+        : []
+
+      if (Array.isArray(rawList) && rawList.length > 0) {
+        const formatted: Blog[] = rawList.map((item: NewsItem) => ({
+          id: item._id || item.id || item.slug,
+          _id: item._id || item.id,
+          title: item.title || "Untitled News",
+          category: item.category || "General",
+          excerpt: item.excerpt || (item.content ? item.content.substring(0, 120) : ""),
+          content: item.content || "",
+          image: item.image || "",
+          tags: item.tags || [],
+          isPopular: item.isPopular ?? false,
+          views: item.views ?? 0,
+          slug: item.slug,
+          createdAt: item.createdAt
+        }))
+        setBlogs(formatted)
+        localStorage.setItem("arzuma_content_blogs", JSON.stringify(formatted))
+        return
+      }
+    } catch (error) {
+      console.error("Failed to load live blogs/news from API:", error)
+    }
+
+    const storedBlogs = localStorage.getItem("arzuma_content_blogs")
+    setBlogs(storedBlogs ? JSON.parse(storedBlogs) : [])
+  }, [])
+
   // Sync state on load
   React.useEffect(() => {
     let active = true
 
     async function loadData() {
-      // 1. Load Projects
       if (active) {
         await fetchProjects()
       }
-
-      // 2. Load Blogs from localStorage
-      const storedBlogs = localStorage.getItem("arzuma_content_blogs")
       if (active) {
-        setBlogs(storedBlogs ? JSON.parse(storedBlogs) : [])
+        await fetchBlogs()
       }
-
-      // 3. Load Categories
       if (active) {
         await fetchCategories()
       }
@@ -153,7 +211,7 @@ export function ContentTab({ permissions, triggerToast }: ContentTabProps) {
     return () => {
       active = false
     }
-  }, [fetchCategories, fetchProjects])
+  }, [fetchCategories, fetchProjects, fetchBlogs])
 
   // Action Persistors
   const saveProjects = (updated: Project[]) => {
@@ -255,15 +313,37 @@ export function ContentTab({ permissions, triggerToast }: ContentTabProps) {
     }
   }
 
-  const handleCreateBlog = (data: Partial<Blog>) => {
-    const newItem: Blog = {
-      ...data,
-      id: Date.now(),
-      date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-    } as Blog
-    saveBlogs([...blogs, newItem])
-    triggerToast("Blog post added successfully!")
-    setIsAdding(false)
+  const handleCreateBlog = async (data: Partial<Blog>) => {
+    try {
+      const token = localStorage.getItem("arzuma_token")
+      if (!token) {
+        throw new Error("Your authentication session has expired or is invalid. Please log out and log in again.")
+      }
+
+      const payload: CreateNewsPayload = {
+        title: data.title || "",
+        content: data.content || data.excerpt || data.title || "",
+        excerpt: data.excerpt,
+        image: formatImageUrl(data.image),
+        category: data.category || "Programming",
+        tags: data.tags || ["typescript", "node"],
+        isPopular: data.isPopular ?? true,
+        views: Number(data.views) || 100
+      }
+
+      const res = await createNews(payload)
+      if (res && res.success !== false) {
+        triggerToast("Blog/news created successfully in database!")
+        setIsAdding(false)
+        await fetchBlogs()
+      } else {
+        throw new Error(res?.message || "Failed to create news post.")
+      }
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "Error creating news/blog."
+      console.error("News creation error:", err)
+      triggerToast(`Error: ${errMsg}`)
+    }
   }
 
   // Update Handlers
@@ -281,15 +361,44 @@ export function ContentTab({ permissions, triggerToast }: ContentTabProps) {
     setEditingId(null)
   }
 
-  const handleUpdateBlog = (data: Partial<Blog>) => {
-    const updated = blogs.map(b => b.id === editingId ? { ...b, ...data } : b)
-    saveBlogs(updated)
-    triggerToast("Blog post updated successfully.")
-    setEditingId(null)
+  const handleUpdateBlog = async (data: Partial<Blog>) => {
+    try {
+      if (!editingId) return
+      const idStr = String(editingId)
+
+      const payload: UpdateNewsPayload = {
+        title: data.title,
+        content: data.content,
+        excerpt: data.excerpt,
+        image: data.image ? formatImageUrl(data.image) : undefined,
+        category: data.category,
+        tags: data.tags,
+        isPopular: data.isPopular,
+        views: data.views
+      }
+
+      const res = await updateNews(idStr, payload)
+      if (res && res.success !== false) {
+        triggerToast("Blog post updated successfully!")
+        setEditingId(null)
+        await fetchBlogs()
+      } else {
+        const updated = blogs.map(b => (b.id === editingId || b._id === editingId) ? { ...b, ...data } : b)
+        saveBlogs(updated)
+        triggerToast("Blog post updated locally.")
+        setEditingId(null)
+      }
+    } catch (err) {
+      console.error("Failed to update blog:", err)
+      const updated = blogs.map(b => (b.id === editingId || b._id === editingId) ? { ...b, ...data } : b)
+      saveBlogs(updated)
+      triggerToast("Blog post updated locally.")
+      setEditingId(null)
+    }
   }
 
   // Delete Handlers
-  const handleDelete = (id: string | number) => {
+  const handleDelete = async (id: string | number) => {
     if (!canDelete) {
       triggerToast("Permission Denied: You cannot delete items.")
       return
@@ -297,17 +406,26 @@ export function ContentTab({ permissions, triggerToast }: ContentTabProps) {
 
     if (activeSubTab === "projects") {
       saveProjects(projects.filter(p => p.id !== id))
+      triggerToast("Item removed successfully.")
     } else if (activeSubTab === "categories") {
       saveCategories(categories.filter(c => c.id !== id))
+      triggerToast("Item removed successfully.")
     } else if (activeSubTab === "blogs") {
-      saveBlogs(blogs.filter(b => b.id !== id))
+      try {
+        await deleteNews(String(id))
+        triggerToast("News post deleted from server.")
+        await fetchBlogs()
+      } catch (err) {
+        console.error("Failed to delete news from backend:", err)
+        saveBlogs(blogs.filter(b => b.id !== id && b._id !== id))
+        triggerToast("Blog post deleted locally.")
+      }
     }
-    triggerToast("Item removed successfully.")
   }
 
   const activeEditingProject = projects.find(p => p.id === editingId) || null
   const activeEditingCategory = categories.find(c => c.id === editingId) || null
-  const activeEditingBlog = blogs.find(b => b.id === editingId) || null
+  const activeEditingBlog = blogs.find(b => b.id === editingId || b._id === editingId) || null
 
   return (
     <div className="space-y-6">
@@ -406,7 +524,7 @@ export function ContentTab({ permissions, triggerToast }: ContentTabProps) {
               blogs={blogs} 
               canEdit={canEdit} 
               canDelete={canDelete} 
-              onEdit={(b) => setEditingId(b.id)} 
+              onEdit={(b) => setEditingId(b._id || b.id || "")} 
               onDelete={handleDelete} 
             />
           )}

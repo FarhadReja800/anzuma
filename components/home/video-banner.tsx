@@ -48,18 +48,22 @@ export function VideoBanner({
   }, [])
 
   // Map to unified array format containing video details
-  const videoList: Video[] = activeVideos.length > 0
-    ? activeVideos
-    : (videos && videos.length
-        ? videos.map(url => ({ videoUrl: url, title, isActive: true }))
-        : (videoUrl
-            ? [{ videoUrl, title, isActive: true }]
-            : []
-          )
-      );
+  const videoList: Video[] = React.useMemo(() => {
+    if (activeVideos.length > 0) {
+      return activeVideos
+    }
+    if (videos && videos.length) {
+      return videos.map(url => ({ videoUrl: url, title, isActive: true }))
+    }
+    if (videoUrl) {
+      return [{ videoUrl, title, isActive: true }]
+    }
+    return []
+  }, [activeVideos, videos, videoUrl, title]);
 
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const videoRefs = React.useRef<(HTMLVideoElement | null)[]>([]);
+  const [progress, setProgress] = React.useState(0);
 
   // Sync ref array dimensions
   React.useEffect(() => {
@@ -68,6 +72,7 @@ export function VideoBanner({
 
   const handleEnded = () => {
     setCurrentIndex((prev) => (prev + 1) % videoList.length);
+    setProgress(0);
   };
 
   React.useEffect(() => {
@@ -89,8 +94,26 @@ export function VideoBanner({
     });
   }, [currentIndex, videoList]);
 
+  // Track current video progress for a subtle progress bar
+  React.useEffect(() => {
+    const videoEl = videoRefs.current[currentIndex];
+    if (!videoEl) return;
+    const handleTimeUpdate = () => {
+      if (!videoEl.duration || Number.isNaN(videoEl.duration)) {
+        setProgress(0);
+        return;
+      }
+      setProgress((videoEl.currentTime / videoEl.duration) * 100);
+    };
+    videoEl.addEventListener("timeupdate", handleTimeUpdate);
+    return () => {
+      videoEl.removeEventListener("timeupdate", handleTimeUpdate);
+    };
+  }, [currentIndex, videoList]);
+
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev - 1 + videoList.length) % videoList.length);
+    setProgress(0);
   };
 
   const handleNext = () => {
@@ -114,7 +137,7 @@ export function VideoBanner({
   return (
     <section className="relative w-full overflow-hidden flex items-center justify-center font-sans">
       {/* Fixed-height video stage: full width, video fully visible (no cropping) */}
-      <div className="relative w-full h-[800px] bg-black flex items-center justify-center">
+      <div className="relative w-full h-200 bg-black flex items-center justify-center">
         {videoList.map((video, idx) => (
           <video
             key={idx}
@@ -126,8 +149,8 @@ export function VideoBanner({
             muted
             playsInline
             onEnded={handleEnded}
-            className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-1000 ${
-              idx === currentIndex ? "opacity-100" : "opacity-0 pointer-events-none"
+            className={`absolute inset-0 w-full h-full object-cover z-0 transform-gpu transition-all duration-1000 ease-in-out ${
+              idx === currentIndex ? "opacity-100 scale-105" : "opacity-0 scale-100 pointer-events-none"
             }`}
           >
             Your browser does not support the video tag.
@@ -166,8 +189,8 @@ export function VideoBanner({
               <button
                 key={idx}
                 onClick={() => handleGoTo(idx)}
-                className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                  idx === currentIndex ? "w-8 bg-teal-400" : "w-2 bg-white/50 hover:bg-white/80"
+                className={`relative h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                  idx === currentIndex ? "w-8 bg-teal-400 animate-pulse dot-pulse" : "w-2 bg-white/50 hover:bg-white/80"
                 }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
@@ -176,8 +199,8 @@ export function VideoBanner({
         )}
 
         {/* Content Container */}
-        <div className="absolute inset-0 z-20 flex items-center justify-center">
-          <div className="max-w-4xl mx-auto px-6 text-center space-y-6 text-white">
+        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+          <div key={currentIndex} className="max-w-4xl mx-auto px-6 text-center space-y-6 text-white will-change-transform animate-fadeUp">
             {currentSubtitle && (
               <span className="text-xs sm:text-sm font-bold uppercase tracking-[0.3em] text-teal-400 dark:text-teal-350 block">
                 {currentSubtitle}
@@ -197,7 +220,7 @@ export function VideoBanner({
             )}
 
             {currentButtonLink && currentButtonText && (
-              <div className="pt-4">
+              <div className="pt-4 pointer-events-auto">
                 <Link
                   href={currentButtonLink}
                   className="inline-flex items-center gap-2 px-8 py-3.5 text-xs sm:text-sm font-bold uppercase tracking-wider text-black bg-white hover:bg-zinc-200 dark:text-white dark:bg-zinc-955 dark:hover:bg-zinc-900 border border-transparent dark:border-zinc-800 transition-all duration-300 rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transform select-none"
@@ -208,7 +231,21 @@ export function VideoBanner({
             )}
           </div>
         </div>
+
+        {/* subtle progress bar */}
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-white/10 z-30">
+          <div
+            className="h-full bg-teal-400 transition-[width] duration-200 linear"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       </div>
+    <style jsx global>{`
+      @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+      .animate-fadeUp { animation: fadeUp 700ms cubic-bezier(.2,.8,.2,1) both; }
+      @keyframes pulseDot { 0% { transform: scale(1); opacity: 0.9 } 100% { transform: scale(1.8); opacity: 0 } }
+      .dot-pulse::after { content: ''; position: absolute; inset: 0; border-radius: 9999px; box-shadow: 0 0 0 6px rgba(52,211,153,0.08); animation: pulseDot 1200ms infinite; }
+    `}</style>
     </section>
   )
 }

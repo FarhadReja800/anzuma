@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
+import { SafeImage } from "@/components/ui/safe-image"
 import { Search } from "lucide-react"
 import { BlogPost } from "./types"
 
@@ -12,7 +12,7 @@ interface BlogSidebarProps {
   onCategoryClick: (category: string) => void
   selectedTag: string | null
   onTagClick: (tag: string) => void
-  onPostClick: (postId: number) => void
+  onPostClick: (postId: string | number) => void
   blogPosts: BlogPost[]
   categories: string[]
   allTags: string[]
@@ -63,7 +63,7 @@ export function BlogSidebar({
             >
               {/* Thumbnail Image */}
               <div className="relative w-16 h-16 bg-zinc-50 dark:bg-zinc-900 flex-shrink-0 overflow-hidden">
-                <Image
+                <SafeImage
                   src={post.image}
                   alt={post.title}
                   fill

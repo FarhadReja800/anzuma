@@ -30,8 +30,11 @@ export async function POST(request: Request) {
     // Write file to filesystem
     fs.writeFileSync(filePath, buffer)
 
-    // Return the relative URL to the uploaded file
-    const fileUrl = `/uploads/${uniqueFilename}`
+    // Determine host origin for absolute URL validation
+    const host = request.headers.get("host")
+    const proto = request.headers.get("x-forwarded-proto") || "http"
+    const origin = host ? `${proto}://${host}` : ""
+    const fileUrl = origin ? `${origin}/uploads/${uniqueFilename}` : `/uploads/${uniqueFilename}`
 
     return NextResponse.json({
       success: true,
