@@ -1,8 +1,6 @@
 {
-  "version": 2,
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "@vercel/node"
-    }
-  }
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install"
 }
